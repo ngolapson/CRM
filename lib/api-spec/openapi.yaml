@@ -3,20 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CRM Customer Management API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: customers
+    description: Customer management
+  - name: employees
+    description: Employee management
+  - name: settings
+    description: System settings (statuses, sources, product types, supply sources)
+  - name: products
+    description: Product / inventory management
+  - name: reports
+    description: Reports and statistics
+  - name: operations
+    description: Operations dashboard
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +36,877 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ========================
+  # EMPLOYEES
+  # ========================
+  /employees:
+    get:
+      operationId: listEmployees
+      tags: [employees]
+      summary: List all employees
+      responses:
+        "200":
+          description: List of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employee"
+    post:
+      operationId: createEmployee
+      tags: [employees]
+      summary: Create a new employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEmployeeBody"
+      responses:
+        "201":
+          description: Employee created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+
+  /employees/{id}:
+    put:
+      operationId: updateEmployee
+      tags: [employees]
+      summary: Update employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEmployeeBody"
+      responses:
+        "200":
+          description: Employee updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+    delete:
+      operationId: deleteEmployee
+      tags: [employees]
+      summary: Delete employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ========================
+  # CUSTOMER STATUSES
+  # ========================
+  /customer-statuses:
+    get:
+      operationId: listCustomerStatuses
+      tags: [settings]
+      summary: List customer statuses
+      responses:
+        "200":
+          description: List of statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerStatus"
+    post:
+      operationId: createCustomerStatus
+      tags: [settings]
+      summary: Create customer status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerStatusBody"
+      responses:
+        "201":
+          description: Status created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerStatus"
+
+  /customer-statuses/{id}:
+    put:
+      operationId: updateCustomerStatus
+      tags: [settings]
+      summary: Update customer status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerStatusBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerStatus"
+    delete:
+      operationId: deleteCustomerStatus
+      tags: [settings]
+      summary: Delete customer status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /customer-statuses/reorder:
+    post:
+      operationId: reorderCustomerStatuses
+      tags: [settings]
+      summary: Reorder customer statuses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderBody"
+      responses:
+        "200":
+          description: Reordered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ========================
+  # CUSTOMER SOURCES
+  # ========================
+  /customer-sources:
+    get:
+      operationId: listCustomerSources
+      tags: [settings]
+      summary: List customer sources
+      responses:
+        "200":
+          description: List of sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerSource"
+    post:
+      operationId: createCustomerSource
+      tags: [settings]
+      summary: Create customer source
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerSourceBody"
+      responses:
+        "201":
+          description: Source created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerSource"
+
+  /customer-sources/{id}:
+    put:
+      operationId: updateCustomerSource
+      tags: [settings]
+      summary: Update customer source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerSourceBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerSource"
+    delete:
+      operationId: deleteCustomerSource
+      tags: [settings]
+      summary: Delete customer source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ========================
+  # PRODUCT TYPES
+  # ========================
+  /product-types:
+    get:
+      operationId: listProductTypes
+      tags: [settings]
+      summary: List product types
+      responses:
+        "200":
+          description: List of product types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductType"
+    post:
+      operationId: createProductType
+      tags: [settings]
+      summary: Create product type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductTypeBody"
+      responses:
+        "201":
+          description: Product type created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductType"
+
+  /product-types/{id}:
+    put:
+      operationId: updateProductType
+      tags: [settings]
+      summary: Update product type
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductTypeBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductType"
+    delete:
+      operationId: deleteProductType
+      tags: [settings]
+      summary: Delete product type
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ========================
+  # SUPPLY SOURCES
+  # ========================
+  /supply-sources:
+    get:
+      operationId: listSupplySources
+      tags: [settings]
+      summary: List supply sources
+      responses:
+        "200":
+          description: List of supply sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplySource"
+    post:
+      operationId: createSupplySource
+      tags: [settings]
+      summary: Create supply source
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupplySourceBody"
+      responses:
+        "201":
+          description: Supply source created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplySource"
+
+  /supply-sources/{id}:
+    put:
+      operationId: updateSupplySource
+      tags: [settings]
+      summary: Update supply source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSupplySourceBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplySource"
+    delete:
+      operationId: deleteSupplySource
+      tags: [settings]
+      summary: Delete supply source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ========================
+  # PRODUCTS / INVENTORY
+  # ========================
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List products in inventory
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    put:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ========================
+  # CUSTOMERS
+  # ========================
+  /customers:
+    get:
+      operationId: listCustomers
+      tags: [customers]
+      summary: List customers with pagination and filtering
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: statusId
+          in: query
+          schema:
+            type: integer
+        - name: employeeId
+          in: query
+          schema:
+            type: integer
+        - name: needFollowUp
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated customers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerListResponse"
+    post:
+      operationId: createCustomer
+      tags: [customers]
+      summary: Create a new customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerBody"
+      responses:
+        "201":
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+
+  /customers/{id}:
+    get:
+      operationId: getCustomer
+      tags: [customers]
+      summary: Get customer detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Customer detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    put:
+      operationId: updateCustomer
+      tags: [customers]
+      summary: Update customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCustomerBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    delete:
+      operationId: deleteCustomer
+      tags: [customers]
+      summary: Delete customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ========================
+  # REPORTS
+  # ========================
+  /reports/summary:
+    get:
+      operationId: getReportSummary
+      tags: [reports]
+      summary: Get report summary stats
+      parameters:
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+        - name: toDate
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Report summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportSummary"
+
+  /reports/status-distribution:
+    get:
+      operationId: getStatusDistribution
+      tags: [reports]
+      summary: Customer distribution by status
+      responses:
+        "200":
+          description: Status distribution
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatusDistributionItem"
+
+  /reports/customers-by-employee:
+    get:
+      operationId: getCustomersByEmployee
+      tags: [reports]
+      summary: Customer stats by employee
+      responses:
+        "200":
+          description: Customers by employee
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmployeeCustomerStats"
+
+  /reports/daily-trend:
+    get:
+      operationId: getDailyTrend
+      tags: [reports]
+      summary: Daily trend (new customers + closed orders)
+      parameters:
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+        - name: toDate
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Daily trend data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DailyTrendItem"
+
+  /reports/customers-by-source:
+    get:
+      operationId: getCustomersBySource
+      tags: [reports]
+      summary: Customers by source (closed vs not closed)
+      responses:
+        "200":
+          description: Customers by source
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SourceCustomerStats"
+
+  /reports/top-sales:
+    get:
+      operationId: getTopSales
+      tags: [reports]
+      summary: Top sales (close rate)
+      responses:
+        "200":
+          description: Top sales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopSalesItem"
+
+  /reports/monthly-trend:
+    get:
+      operationId: getMonthlyTrend
+      tags: [reports]
+      summary: Monthly trend (new customers + closed orders)
+      responses:
+        "200":
+          description: Monthly trend
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyTrendItem"
+
+  /reports/monthly-profit:
+    get:
+      operationId: getMonthlyProfit
+      tags: [reports]
+      summary: Monthly profit chart data
+      responses:
+        "200":
+          description: Monthly profit
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyProfitItem"
+
+  /reports/top-customers:
+    get:
+      operationId: getTopCustomers
+      tags: [reports]
+      summary: Top customers by revenue
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Top customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopCustomerItem"
+
+  /reports/revenue-by-source:
+    get:
+      operationId: getRevenueBySource
+      tags: [reports]
+      summary: Revenue by customer source
+      responses:
+        "200":
+          description: Revenue by source
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RevenueBySourceItem"
+
+  /reports/revenue-by-employee:
+    get:
+      operationId: getRevenueByEmployee
+      tags: [reports]
+      summary: Revenue by employee
+      responses:
+        "200":
+          description: Revenue by employee
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RevenueByEmployeeItem"
+
+  /reports/expiring-warranties:
+    get:
+      operationId: getExpiringWarranties
+      tags: [reports]
+      summary: Orders with expiring warranties
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Expiring warranties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WarrantyItem"
+
+  /reports/expired-warranties:
+    get:
+      operationId: getExpiredWarranties
+      tags: [reports]
+      summary: Orders with expired warranties
+      responses:
+        "200":
+          description: Expired warranties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WarrantyItem"
+
+  # ========================
+  # OPERATIONS
+  # ========================
+  /operations/today:
+    get:
+      operationId: getTodayStats
+      tags: [operations]
+      summary: Today's operations stats
+      responses:
+        "200":
+          description: Today stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodayStats"
+
+  /operations/sales-trend:
+    get:
+      operationId: getSalesTrend
+      tags: [operations]
+      summary: Sales trend for last 7 days
+      responses:
+        "200":
+          description: Sales trend
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SalesTrendItem"
+
+  /operations/inventory-summary:
+    get:
+      operationId: getInventorySummary
+      tags: [operations]
+      summary: Inventory summary stats
+      responses:
+        "200":
+          description: Inventory summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventorySummary"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +914,594 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]
+
+    ReorderBody:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+      required: [ids]
+
+    # ========================
+    # EMPLOYEE
+    # ========================
+    Employee:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        role:
+          type: string
+        isProtected:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, name, role]
+
+    CreateEmployeeBody:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+      required: [name, role]
+
+    # ========================
+    # CUSTOMER STATUS
+    # ========================
+    CustomerStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+        sortOrder:
+          type: integer
+        isSystem:
+          type: boolean
+      required: [id, name, color, sortOrder]
+
+    CreateCustomerStatusBody:
+      type: object
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+        sortOrder:
+          type: integer
+      required: [name, color]
+
+    # ========================
+    # CUSTOMER SOURCE
+    # ========================
+    CustomerSource:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+      required: [id, name]
+
+    CreateCustomerSourceBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+      required: [name]
+
+    # ========================
+    # PRODUCT TYPE
+    # ========================
+    ProductType:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+      required: [id, name]
+
+    CreateProductTypeBody:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+      required: [name]
+
+    # ========================
+    # SUPPLY SOURCE
+    # ========================
+    SupplySource:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        inventoryValue:
+          type: integer
+      required: [id, name]
+
+    CreateSupplySourceBody:
+      type: object
+      properties:
+        name:
+          type: string
+        inventoryValue:
+          type: integer
+      required: [name]
+
+    # ========================
+    # PRODUCT
+    # ========================
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        productTypeId:
+          type: integer
+        productTypeName:
+          type: string
+        supplySourceId:
+          type: integer
+        supplySourceName:
+          type: string
+        quantity:
+          type: integer
+        costPrice:
+          type: integer
+        sellPrice:
+          type: integer
+        warrantyMonths:
+          type: integer
+        note:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, quantity, costPrice, sellPrice]
+
+    CreateProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        productTypeId:
+          type: integer
+        supplySourceId:
+          type: integer
+        quantity:
+          type: integer
+        costPrice:
+          type: integer
+        sellPrice:
+          type: integer
+        warrantyMonths:
+          type: integer
+        note:
+          type: string
+      required: [name, quantity, costPrice, sellPrice]
+
+    # ========================
+    # CUSTOMER
+    # ========================
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        createdAt:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        note:
+          type: string
+        statusId:
+          type: integer
+        statusName:
+          type: string
+        statusColor:
+          type: string
+        employeeId:
+          type: integer
+        employeeName:
+          type: string
+        sourceId:
+          type: integer
+        sourceName:
+          type: string
+        lastContactAt:
+          type: string
+          nullable: true
+        nextContactAt:
+          type: string
+          nullable: true
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        totalRevenue:
+          type: integer
+        totalProfit:
+          type: integer
+      required: [id, name, phone, statusId, employeeId]
+
+    CustomerListResponse:
+      type: object
+      properties:
+        customers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Customer"
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+      required: [customers, total, page, pageSize, totalPages]
+
+    CreateCustomerBody:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          nullable: true
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        statusId:
+          type: integer
+        employeeId:
+          type: integer
+        sourceId:
+          type: integer
+          nullable: true
+        lastContactAt:
+          type: string
+          nullable: true
+        nextContactAt:
+          type: string
+          nullable: true
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateOrderBody"
+      required: [name, phone, statusId, employeeId]
+
+    # ========================
+    # ORDER
+    # ========================
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: integer
+        closedAt:
+          type: string
+          nullable: true
+        orderCode:
+          type: string
+          nullable: true
+        productTypeId:
+          type: integer
+          nullable: true
+        productTypeName:
+          type: string
+          nullable: true
+        supplySourceId:
+          type: integer
+          nullable: true
+        supplySourceName:
+          type: string
+          nullable: true
+        productId:
+          type: integer
+          nullable: true
+        productName:
+          type: string
+          nullable: true
+        customProductName:
+          type: string
+          nullable: true
+        revenue:
+          type: integer
+        profit:
+          type: integer
+        warrantyMonths:
+          type: integer
+          nullable: true
+        warrantyExpiry:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, customerId, revenue, profit]
+
+    CreateOrderBody:
+      type: object
+      properties:
+        closedAt:
+          type: string
+          nullable: true
+        orderCode:
+          type: string
+          nullable: true
+        productTypeId:
+          type: integer
+          nullable: true
+        supplySourceId:
+          type: integer
+          nullable: true
+        productId:
+          type: integer
+          nullable: true
+        customProductName:
+          type: string
+          nullable: true
+        revenue:
+          type: integer
+        profit:
+          type: integer
+        warrantyMonths:
+          type: integer
+          nullable: true
+        note:
+          type: string
+          nullable: true
+      required: [revenue, profit]
+
+    # ========================
+    # REPORTS
+    # ========================
+    ReportSummary:
+      type: object
+      properties:
+        safeProfit:
+          type: integer
+        warrantyRiskAmount:
+          type: integer
+        inventoryCapital:
+          type: integer
+        productsNeedPush:
+          type: integer
+        inventoryTurnover:
+          type: number
+        averageInventoryAge:
+          type: number
+        totalCustomers:
+          type: integer
+        totalRevenue:
+          type: integer
+        todayCustomers:
+          type: integer
+        totalProfit:
+          type: integer
+      required: [safeProfit, warrantyRiskAmount, inventoryCapital, totalCustomers, totalRevenue, totalProfit]
+
+    StatusDistributionItem:
+      type: object
+      properties:
+        statusId:
+          type: integer
+        statusName:
+          type: string
+        statusColor:
+          type: string
+        count:
+          type: integer
+      required: [statusId, statusName, count]
+
+    EmployeeCustomerStats:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+        employeeName:
+          type: string
+        statusBreakdown:
+          type: object
+          additionalProperties:
+            type: integer
+      required: [employeeId, employeeName]
+
+    DailyTrendItem:
+      type: object
+      properties:
+        date:
+          type: string
+        newCustomers:
+          type: integer
+        closedOrders:
+          type: integer
+      required: [date, newCustomers, closedOrders]
+
+    SourceCustomerStats:
+      type: object
+      properties:
+        sourceName:
+          type: string
+        closed:
+          type: integer
+        notClosed:
+          type: integer
+      required: [sourceName, closed, notClosed]
+
+    TopSalesItem:
+      type: object
+      properties:
+        employeeName:
+          type: string
+        closeRate:
+          type: number
+        closedCount:
+          type: integer
+      required: [employeeName, closeRate, closedCount]
+
+    MonthlyTrendItem:
+      type: object
+      properties:
+        month:
+          type: string
+        newCustomers:
+          type: integer
+        closedOrders:
+          type: integer
+      required: [month, newCustomers, closedOrders]
+
+    MonthlyProfitItem:
+      type: object
+      properties:
+        month:
+          type: string
+        profit:
+          type: integer
+      required: [month, profit]
+
+    TopCustomerItem:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        totalRevenue:
+          type: integer
+        totalProfit:
+          type: integer
+      required: [customerId, customerName, totalRevenue, totalProfit]
+
+    RevenueBySourceItem:
+      type: object
+      properties:
+        sourceName:
+          type: string
+        totalRevenue:
+          type: integer
+      required: [sourceName, totalRevenue]
+
+    RevenueByEmployeeItem:
+      type: object
+      properties:
+        employeeName:
+          type: string
+        totalRevenue:
+          type: integer
+      required: [employeeName, totalRevenue]
+
+    WarrantyItem:
+      type: object
+      properties:
+        orderId:
+          type: integer
+        orderCode:
+          type: string
+          nullable: true
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        phone:
+          type: string
+        productTypeName:
+          type: string
+          nullable: true
+        supplySourceName:
+          type: string
+          nullable: true
+        warrantyExpiry:
+          type: string
+          nullable: true
+      required: [orderId, customerId, customerName, phone]
+
+    # ========================
+    # OPERATIONS
+    # ========================
+    TodayStats:
+      type: object
+      properties:
+        todayRevenue:
+          type: integer
+        todayOrders:
+          type: integer
+        todayProfit:
+          type: integer
+      required: [todayRevenue, todayOrders, todayProfit]
+
+    SalesTrendItem:
+      type: object
+      properties:
+        date:
+          type: string
+        revenue:
+          type: integer
+      required: [date, revenue]
+
+    InventorySummary:
+      type: object
+      properties:
+        totalCapital:
+          type: integer
+        above30Days:
+          type: integer
+        above60Days:
+          type: integer
+        above90Days:
+          type: integer
+        lowStock:
+          type: integer
+      required: [totalCapital, above30Days, above60Days, above90Days, lowStock]

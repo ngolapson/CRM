@@ -1,0 +1,241 @@
+import { Router } from "express";
+import { db } from "@workspace/db";
+import {
+  customersTable,
+  ordersTable,
+  customerStatusesTable,
+  employeesTable,
+  customerSourcesTable,
+  productTypesTable,
+  supplySourcesTable,
+  productsTable,
+} from "@workspace/db/schema";
+import { eq, and, sql, desc, asc } from "drizzle-orm";
+
+const router = Router();
+
+async function getCustomerWithOrders(customerId: number) {
+  const [customer] = await db
+    .select({
+      id: customersTable.id,
+      code: customersTable.code,
+      createdAt: customersTable.createdAt,
+      name: customersTable.name,
+      phone: customersTable.phone,
+      address: customersTable.address,
+      note: customersTable.note,
+      statusId: customersTable.statusId,
+      statusName: customerStatusesTable.name,
+      statusColor: customerStatusesTable.color,
+      employeeId: customersTable.employeeId,
+      employeeName: employeesTable.name,
+      sourceId: customersTable.sourceId,
+      sourceName: customerSourcesTable.name,
+      lastContactAt: customersTable.lastContactAt,
+      nextContactAt: customersTable.nextContactAt,
+    })
+    .from(customersTable)
+    .leftJoin(customerStatusesTable, eq(customersTable.statusId, customerStatusesTable.id))
+    .leftJoin(employeesTable, eq(customersTable.employeeId, employeesTable.id))
+    .leftJoin(customerSourcesTable, eq(customersTable.sourceId, customerSourcesTable.id))
+    .where(eq(customersTable.id, customerId));
+
+  if (!customer) return null;
+
+  const orders = await db
+    .select({
+      id: ordersTable.id,
+      customerId: ordersTable.customerId,
+      closedAt: ordersTable.closedAt,
+      orderCode: ordersTable.orderCode,
+      productTypeId: ordersTable.productTypeId,
+      productTypeName: productTypesTable.name,
+      supplySourceId: ordersTable.supplySourceId,
+      supplySourceName: supplySourcesTable.name,
+      productId: ordersTable.productId,
+      productName: productsTable.name,
+      customProductName: ordersTable.customProductName,
+      revenue: ordersTable.revenue,
+      profit: ordersTable.profit,
+      warrantyMonths: ordersTable.warrantyMonths,
+      warrantyExpiry: ordersTable.warrantyExpiry,
+      note: ordersTable.note,
+      createdAt: ordersTable.createdAt,
+    })
+    .from(ordersTable)
+    .leftJoin(productTypesTable, eq(ordersTable.productTypeId, productTypesTable.id))
+    .leftJoin(supplySourcesTable, eq(ordersTable.supplySourceId, supplySourcesTable.id))
+    .leftJoin(productsTable, eq(ordersTable.productId, productsTable.id))
+    .where(eq(ordersTable.customerId, customerId))
+    .orderBy(desc(ordersTable.createdAt));
+
+  const totalRevenue = orders.reduce((s, o) => s + (Number(o.revenue) || 0), 0);
+  const totalProfit = orders.reduce((s, o) => s + (Number(o.profit) || 0), 0);
+
+  return {
+    ...customer,
+    createdAt: customer.createdAt?.toISOString(),
+    lastContactAt: customer.lastContactAt?.toISOString() || null,
+    nextContactAt: customer.nextContactAt?.toISOString() || null,
+    orders: orders.map(o => ({
+      ...o,
+      closedAt: o.closedAt?.toISOString() || null,
+      warrantyExpiry: o.warrantyExpiry?.toISOString() || null,
+      createdAt: o.createdAt?.toISOString(),
+    })),
+    totalRevenue,
+    totalProfit,
+  };
+}
+
+router.get("/customers", async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const pageSize = Number(req.query.pageSize) || 10;
+  const statusId = req.query.statusId ? Number(req.query.statusId) : undefined;
+  const employeeId = req.query.employeeId ? Number(req.query.employeeId) : undefined;
+  const needFollowUp = req.query.needFollowUp === "true";
+  const offset = (page - 1) * pageSize;
+
+  const conditions: ReturnType<typeof eq>[] = [];
+  if (statusId) conditions.push(eq(customersTable.statusId, statusId));
+  if (employeeId) conditions.push(eq(customersTable.employeeId, employeeId));
+  if (needFollowUp) {
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    conditions.push(sql`${customersTable.nextContactAt} <= ${sevenDaysFromNow}` as any);
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const allCustomers = await db
+    .select({ id: customersTable.id })
+    .from(customersTable)
+    .where(whereClause);
+
+  const total = allCustomers.length;
+  const totalPages = Math.ceil(total / pageSize);
+
+  const customerIds = await db
+    .select({ id: customersTable.id })
+    .from(customersTable)
+    .where(whereClause)
+    .orderBy(desc(customersTable.createdAt))
+    .limit(pageSize)
+    .offset(offset);
+
+  const customers = await Promise.all(customerIds.map(c => getCustomerWithOrders(c.id)));
+
+  res.json({
+    customers: customers.filter(Boolean),
+    total,
+    page,
+    pageSize,
+    totalPages,
+  });
+});
+
+router.get("/customers/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const customer = await getCustomerWithOrders(id);
+  if (!customer) return res.status(404).json({ error: "Not found" });
+  res.json(customer);
+});
+
+router.post("/customers", async (req, res) => {
+  const { name, phone, address = null, note = null, statusId, employeeId, sourceId = null, lastContactAt = null, nextContactAt = null, createdAt, orders = [] } = req.body;
+  if (!name || !phone) return res.status(400).json({ error: "name and phone are required" });
+
+  const allCustomers = await db.select({ id: customersTable.id }).from(customersTable);
+  const code = `KH${allCustomers.length + 1}`;
+
+  const [customer] = await db.insert(customersTable).values({
+    code,
+    name,
+    phone,
+    address,
+    note,
+    statusId,
+    employeeId,
+    sourceId,
+    lastContactAt: lastContactAt ? new Date(lastContactAt) : null,
+    nextContactAt: nextContactAt ? new Date(nextContactAt) : null,
+    createdAt: createdAt ? new Date(createdAt) : new Date(),
+  }).returning();
+
+  for (const order of orders) {
+    const warrantyExpiry = order.closedAt && order.warrantyMonths
+      ? new Date(new Date(order.closedAt).setMonth(new Date(order.closedAt).getMonth() + order.warrantyMonths))
+      : null;
+
+    await db.insert(ordersTable).values({
+      customerId: customer.id,
+      closedAt: order.closedAt ? new Date(order.closedAt) : null,
+      orderCode: order.orderCode || null,
+      productTypeId: order.productTypeId || null,
+      supplySourceId: order.supplySourceId || null,
+      productId: order.productId || null,
+      customProductName: order.customProductName || null,
+      revenue: order.revenue || 0,
+      profit: order.profit || 0,
+      warrantyMonths: order.warrantyMonths || null,
+      warrantyExpiry,
+      note: order.note || null,
+    });
+
+    if (order.productId) {
+      await db.update(productsTable).set({ quantity: sql`${productsTable.quantity} - 1` }).where(eq(productsTable.id, order.productId));
+    }
+  }
+
+  const result = await getCustomerWithOrders(customer.id);
+  res.status(201).json(result);
+});
+
+router.put("/customers/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const { name, phone, address = null, note = null, statusId, employeeId, sourceId = null, lastContactAt = null, nextContactAt = null, orders } = req.body;
+  if (!name || !phone) return res.status(400).json({ error: "name and phone are required" });
+
+  await db.update(customersTable).set({
+    name, phone, address, note, statusId, employeeId, sourceId,
+    lastContactAt: lastContactAt ? new Date(lastContactAt) : null,
+    nextContactAt: nextContactAt ? new Date(nextContactAt) : null,
+  }).where(eq(customersTable.id, id));
+
+  if (orders !== undefined) {
+    await db.delete(ordersTable).where(eq(ordersTable.customerId, id));
+    for (const order of orders) {
+      const warrantyExpiry = order.closedAt && order.warrantyMonths
+        ? new Date(new Date(order.closedAt).setMonth(new Date(order.closedAt).getMonth() + order.warrantyMonths))
+        : null;
+
+      await db.insert(ordersTable).values({
+        customerId: id,
+        closedAt: order.closedAt ? new Date(order.closedAt) : null,
+        orderCode: order.orderCode || null,
+        productTypeId: order.productTypeId || null,
+        supplySourceId: order.supplySourceId || null,
+        productId: order.productId || null,
+        customProductName: order.customProductName || null,
+        revenue: order.revenue || 0,
+        profit: order.profit || 0,
+        warrantyMonths: order.warrantyMonths || null,
+        warrantyExpiry,
+        note: order.note || null,
+      });
+    }
+  }
+
+  const result = await getCustomerWithOrders(id);
+  if (!result) return res.status(404).json({ error: "Not found" });
+  res.json(result);
+});
+
+router.delete("/customers/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  await db.delete(ordersTable).where(eq(ordersTable.customerId, id));
+  await db.delete(customersTable).where(eq(customersTable.id, id));
+  res.json({ success: true, message: "Deleted" });
+});
+
+export default router;
