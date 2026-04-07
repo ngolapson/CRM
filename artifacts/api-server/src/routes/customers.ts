@@ -207,7 +207,7 @@ async function insertOrders(customerId: number, orders: OrderInput[]): Promise<v
 
     if (order.productId) {
       await db.update(productsTable)
-        .set({ quantity: sql`${productsTable.quantity} - 1` })
+        .set({ quantity: sql`${productsTable.quantity} - ${qty}` })
         .where(eq(productsTable.id, order.productId));
     }
   }
