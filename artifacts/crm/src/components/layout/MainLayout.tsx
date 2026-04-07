@@ -61,7 +61,14 @@ export function MainLayout({ children, activeTab }: { children: React.ReactNode,
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-border shadow-sm z-10">
         <div className="flex items-center gap-4">
-          <div className="font-medium text-sm">{user?.name ?? "Administrator"}</div>
+          <div className="flex items-center gap-2">
+            <div className="font-medium text-sm">{user?.name ?? "Administrator"}</div>
+            {user?.role && (
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${user.role === "Admin" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
+                {user.role === "Admin" ? "Quản trị" : "Nhân viên"}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"

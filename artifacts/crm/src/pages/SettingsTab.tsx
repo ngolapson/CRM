@@ -672,20 +672,20 @@ export function SettingsTab() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Loại mặt hàng</Label>
-                <Select value={productFormData.productTypeId} onValueChange={v => setProductFormData({ ...productFormData, productTypeId: v })}>
+                <Select value={productFormData.productTypeId || "__none__"} onValueChange={v => setProductFormData({ ...productFormData, productTypeId: v === "__none__" ? "" : v })}>
                   <SelectTrigger><SelectValue placeholder="Chọn loại..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">-- Không chọn --</SelectItem>
+                    <SelectItem value="__none__">-- Không chọn --</SelectItem>
                     {productTypes?.map(pt => <SelectItem key={pt.id} value={String(pt.id)}>{pt.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>Nguồn hàng</Label>
-                <Select value={productFormData.supplySourceId} onValueChange={v => setProductFormData({ ...productFormData, supplySourceId: v })}>
+                <Select value={productFormData.supplySourceId || "__none__"} onValueChange={v => setProductFormData({ ...productFormData, supplySourceId: v === "__none__" ? "" : v })}>
                   <SelectTrigger><SelectValue placeholder="Chọn nguồn..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">-- Không chọn --</SelectItem>
+                    <SelectItem value="__none__">-- Không chọn --</SelectItem>
                     {supplySources?.map(ss => <SelectItem key={ss.id} value={String(ss.id)}>{ss.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
