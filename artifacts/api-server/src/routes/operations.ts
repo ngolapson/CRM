@@ -21,7 +21,7 @@ router.get("/operations/today", async (req, res) => {
     .where(and(
       sql`${ordersTable.closedAt} is not null`,
       gte(ordersTable.closedAt, today),
-      lte(ordersTable.closedAt, tomorrow),
+      sql`${ordersTable.closedAt} < ${tomorrow}`,
     ));
 
   res.json({

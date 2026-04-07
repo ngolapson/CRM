@@ -5,6 +5,7 @@ import {
   customerSourcesTable,
   productTypesTable,
   supplySourcesTable,
+  productsTable,
   customersTable,
   ordersTable,
 } from "@workspace/db/schema";
@@ -46,6 +47,20 @@ export async function seedIfEmpty() {
     { name: "Đại lý cấp 1" },
     { name: "Nhập khẩu" },
   ]).returning();
+
+  const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
+  await db.insert(productsTable).values([
+    { name: "GPT Plus 1 tháng", productTypeId: productTypes[0]!.id, supplySourceId: supplySources[0]!.id, quantity: 10, costPrice: 280000, sellPrice: 450000, warrantyMonths: 1, note: "Tài khoản ChatGPT Plus" },
+    { name: "Canva Pro 1 năm", productTypeId: productTypes[0]!.id, supplySourceId: supplySources[0]!.id, quantity: 8, costPrice: 320000, sellPrice: 550000, warrantyMonths: 12, note: "Tài khoản Canva Pro" },
+    { name: "MacBook Air M2 8GB", productTypeId: productTypes[1]!.id, supplySourceId: supplySources[2]!.id, quantity: 3, costPrice: 25000000, sellPrice: 29000000, warrantyMonths: 12, note: "Apple MacBook Air M2 256GB", createdAt: sixtyDaysAgo },
+    { name: "MacBook Pro M3 16GB", productTypeId: productTypes[1]!.id, supplySourceId: supplySources[2]!.id, quantity: 2, costPrice: 30000000, sellPrice: 35000000, warrantyMonths: 12, note: "Apple MacBook Pro M3 512GB", createdAt: ninetyDaysAgo },
+    { name: "Chuột Logitech MX Master 3", productTypeId: productTypes[2]!.id, supplySourceId: supplySources[1]!.id, quantity: 5, costPrice: 800000, sellPrice: 1200000, warrantyMonths: 24, note: "Chuột không dây cao cấp" },
+    { name: "Bàn phím Keychron K8", productTypeId: productTypes[2]!.id, supplySourceId: supplySources[1]!.id, quantity: 4, costPrice: 1100000, sellPrice: 1800000, warrantyMonths: 12, note: "Bàn phím cơ TKL", createdAt: sixtyDaysAgo },
+    { name: "Tai nghe Sony WH-1000XM5", productTypeId: productTypes[2]!.id, supplySourceId: supplySources[2]!.id, quantity: 3, costPrice: 3800000, sellPrice: 5500000, warrantyMonths: 12, note: "Chống ồn cao cấp" },
+    { name: "SSD Samsung 870 EVO 1TB", productTypeId: productTypes[2]!.id, supplySourceId: supplySources[1]!.id, quantity: 2, costPrice: 1800000, sellPrice: 2800000, warrantyMonths: 36, note: "SSD SATA 2.5 inch" },
+  ]);
 
   const sId = (name: string) => statuses.find(s => s.name === name)!.id;
   const srcId = (name: string) => sources.find(s => s.name === name)!.id;
