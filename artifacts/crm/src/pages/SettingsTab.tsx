@@ -1,5 +1,6 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ interface ImportStockState {
 }
 
 export function SettingsTab() {
+  const search = useSearch();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -99,7 +101,18 @@ export function SettingsTab() {
   const [productForm, setProductForm] = useState<ProductFormState>({ open: false, product: null });
   const [importStock, setImportStock] = useState<ImportStockState>({ open: false, productId: null });
   const [productFilter, setProductFilter] = useState("");
-  const [activeSettingsSection, setActiveSettingsSection] = useState<"entities" | "products" | "receipts">("entities");
+  const initialSection = (() => {
+    const s = new URLSearchParams(search).get("section");
+    return (s === "products" || s === "receipts" || s === "entities") ? s : "entities";
+  })() as "entities" | "products" | "receipts";
+  const [activeSettingsSection, setActiveSettingsSection] = useState<"entities" | "products" | "receipts">(initialSection);
+
+  useEffect(() => {
+    const section = new URLSearchParams(search).get("section");
+    if (section === "products" || section === "receipts" || section === "entities") {
+      setActiveSettingsSection(section);
+    }
+  }, [search]);
 
   const [importData, setImportData] = useState({ quantity: "", importDate: new Date().toISOString().split("T")[0], note: "" });
   const [productFormData, setProductFormData] = useState({

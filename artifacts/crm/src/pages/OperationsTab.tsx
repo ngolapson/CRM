@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation, useSearch } from "wouter";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +28,15 @@ import { useQueryClient } from "@tanstack/react-query";
 type SubTab = "hom-nay" | "ban-hang" | "lai-lo" | "kho-hang" | "bao-hanh";
 
 export function OperationsTab() {
-  const [activeTab, setActiveTab] = useState<SubTab>("hom-nay");
+  const search = useSearch();
+  const initialTab = (new URLSearchParams(search).get("tab") as SubTab) || "hom-nay";
+  const [activeTab, setActiveTab] = useState<SubTab>(initialTab);
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    const tab = (new URLSearchParams(search).get("tab") as SubTab);
+    if (tab) setActiveTab(tab);
+  }, [search]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -543,17 +550,36 @@ export function OperationsTab() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label>Chọn sản phẩm *</Label>
+              <div className="flex items-center justify-between">
+                <Label>Chọn sản phẩm *</Label>
+                <button
+                  type="button"
+                  className="text-xs text-emerald-600 hover:text-emerald-700 underline"
+                  onClick={() => { setImportOpen(false); setLocation("/cai-dat?section=products"); }}
+                >
+                  + Thêm sản phẩm mới
+                </button>
+              </div>
               <Select value={selectedProductId} onValueChange={setSelectedProductId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn sản phẩm..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {products?.map(p => (
+                  {products && products.length > 0 ? products.map(p => (
                     <SelectItem key={p.id} value={String(p.id)}>
                       {p.name} (tồn: {p.quantity})
                     </SelectItem>
-                  ))}
+                  )) : (
+                    <div className="py-4 text-center text-sm text-muted-foreground">
+                      Chưa có sản phẩm nào.{" "}
+                      <button
+                        className="text-emerald-600 underline"
+                        onClick={() => { setImportOpen(false); setLocation("/cai-dat?section=products"); }}
+                      >
+                        Thêm ngay
+                      </button>
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>

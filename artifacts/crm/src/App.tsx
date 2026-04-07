@@ -7,6 +7,8 @@ import { CustomersTab } from "@/pages/CustomersTab";
 import { ReportsTab } from "@/pages/ReportsTab";
 import { OperationsTab } from "@/pages/OperationsTab";
 import { SettingsTab } from "@/pages/SettingsTab";
+import { LoginPage } from "@/pages/LoginPage";
+import { AuthProvider, useAuth } from "@/lib/auth";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +20,12 @@ const queryClient = new QueryClient({
 });
 
 function Router() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
   return (
     <Switch>
       <Route path="/" component={CustomersTab} />
@@ -33,9 +41,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
+        <AuthProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+        </AuthProvider>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
