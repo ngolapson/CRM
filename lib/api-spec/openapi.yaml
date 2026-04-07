@@ -1487,6 +1487,12 @@ components:
         supplySourceName:
           type: string
           nullable: true
+        customProductName:
+          type: string
+          nullable: true
+        warrantyCode:
+          type: string
+          nullable: true
         warrantyExpiry:
           type: string
           nullable: true

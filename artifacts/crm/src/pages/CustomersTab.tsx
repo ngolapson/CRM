@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 export function CustomersTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [statusId, setStatusId] = useState<number | undefined>();
@@ -44,6 +46,15 @@ export function CustomersTab() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("open") === "add") {
+      setSelectedCustomer(undefined);
+      setDialogOpen(true);
+      setLocation("/", { replace: true });
+    }
+  }, [setLocation]);
 
   const { data: statusesData } = useListCustomerStatuses();
   const { data: employeesData } = useListEmployees();

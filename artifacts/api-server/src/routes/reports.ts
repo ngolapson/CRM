@@ -400,6 +400,8 @@ router.get("/reports/expiring-warranties", async (req, res) => {
       productTypeName: sql<string>`pt.name`,
       supplySourceName: sql<string>`ss.name`,
       warrantyExpiry: ordersTable.warrantyExpiry,
+      warrantyCode: ordersTable.warrantyCode,
+      customProductName: ordersTable.customProductName,
     })
     .from(ordersTable)
     .leftJoin(customersTable, eq(ordersTable.customerId, customersTable.id))
@@ -431,6 +433,8 @@ router.get("/reports/expired-warranties", async (req, res) => {
       productTypeName: sql<string>`pt.name`,
       supplySourceName: sql<string>`ss.name`,
       warrantyExpiry: ordersTable.warrantyExpiry,
+      warrantyCode: ordersTable.warrantyCode,
+      customProductName: ordersTable.customProductName,
     })
     .from(ordersTable)
     .leftJoin(customersTable, eq(ordersTable.customerId, customersTable.id))

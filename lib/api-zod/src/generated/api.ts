@@ -789,6 +789,8 @@ export const GetExpiringWarrantiesResponseItem = zod.object({
   phone: zod.string(),
   productTypeName: zod.string().nullish(),
   supplySourceName: zod.string().nullish(),
+  customProductName: zod.string().nullish(),
+  warrantyCode: zod.string().nullish(),
   warrantyExpiry: zod.string().nullish(),
 });
 export const GetExpiringWarrantiesResponse = zod.array(
@@ -806,6 +808,8 @@ export const GetExpiredWarrantiesResponseItem = zod.object({
   phone: zod.string(),
   productTypeName: zod.string().nullish(),
   supplySourceName: zod.string().nullish(),
+  customProductName: zod.string().nullish(),
+  warrantyCode: zod.string().nullish(),
   warrantyExpiry: zod.string().nullish(),
 });
 export const GetExpiredWarrantiesResponse = zod.array(

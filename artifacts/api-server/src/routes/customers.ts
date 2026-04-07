@@ -127,7 +127,7 @@ router.get("/customers", async (req, res) => {
   if (needFollowUp) {
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-    conditions.push(sql`${customersTable.nextContactAt} <= ${sevenDaysFromNow}`);
+    conditions.push(sql`${customersTable.nextContactAt} IS NOT NULL AND ${customersTable.nextContactAt} <= ${sevenDaysFromNow}`);
   }
   if (search) {
     conditions.push(or(
@@ -174,8 +174,15 @@ router.get("/customers/:id", async (req, res) => {
 
 async function insertOrders(customerId: number, orders: OrderInput[]): Promise<void> {
   for (const order of orders) {
-    const warrantyExpiry = order.closedAt && order.warrantyMonths
-      ? new Date(new Date(order.closedAt).setMonth(new Date(order.closedAt).getMonth() + order.warrantyMonths))
+    const qty = order.quantity ?? 1;
+    const sp = order.sellPrice ?? 0;
+    const cp = order.costPrice ?? 0;
+    const computedRevenue = order.revenue != null ? order.revenue : qty * sp;
+    const computedProfit = order.profit != null ? order.profit : qty * (sp - cp);
+
+    const warrantyMonthsToUse = order.warrantyMonths ?? order.warrantySourceMonths ?? null;
+    const warrantyExpiry = order.closedAt && warrantyMonthsToUse
+      ? new Date(new Date(order.closedAt).setMonth(new Date(order.closedAt).getMonth() + warrantyMonthsToUse))
       : null;
 
     await db.insert(ordersTable).values({
@@ -186,11 +193,11 @@ async function insertOrders(customerId: number, orders: OrderInput[]): Promise<v
       supplySourceId: order.supplySourceId ?? null,
       productId: order.productId ?? null,
       customProductName: order.customProductName ?? null,
-      quantity: order.quantity ?? 1,
-      sellPrice: order.sellPrice ?? 0,
-      costPrice: order.costPrice ?? 0,
-      revenue: order.revenue ?? 0,
-      profit: order.profit ?? 0,
+      quantity: qty,
+      sellPrice: sp,
+      costPrice: cp,
+      revenue: computedRevenue,
+      profit: computedProfit,
       warrantyMonths: order.warrantyMonths ?? null,
       warrantySourceMonths: order.warrantySourceMonths ?? null,
       warrantyCode: order.warrantyCode ?? null,

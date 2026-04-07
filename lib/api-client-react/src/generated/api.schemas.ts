@@ -275,6 +275,8 @@ export interface WarrantyItem {
   phone: string;
   productTypeName?: string | null;
   supplySourceName?: string | null;
+  customProductName?: string | null;
+  warrantyCode?: string | null;
   warrantyExpiry?: string | null;
 }
 

@@ -134,7 +134,7 @@ export function OperationsTab() {
                 <CardTitle className="text-base font-semibold">Thao tác nhanh</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <Button className="w-full justify-start h-12" variant="default" onClick={() => setLocation("/")}>
+                <Button className="w-full justify-start h-12" variant="default" onClick={() => setLocation("/?open=add")}>
                   <Plus className="w-5 h-5 mr-3 opacity-80" />
                   <span className="font-semibold">+ Tạo đơn mới</span>
                 </Button>
@@ -363,6 +363,7 @@ export function OperationsTab() {
                         <TableHead>Khách hàng</TableHead>
                         <TableHead>SĐT</TableHead>
                         <TableHead>Sản phẩm</TableHead>
+                        <TableHead>Mã BH nguồn</TableHead>
                         <TableHead>Ngày hết hạn</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -371,7 +372,8 @@ export function OperationsTab() {
                         <TableRow key={w.orderId}>
                           <TableCell className="font-medium">{w.customerName}</TableCell>
                           <TableCell className="text-sm">{w.phone}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{w.productTypeName ?? w.supplySourceName ?? "-"}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{w.customProductName ?? w.productTypeName ?? w.supplySourceName ?? "-"}</TableCell>
+                          <TableCell className="text-sm font-mono text-muted-foreground">{w.warrantyCode ?? "-"}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className="border-amber-400 text-amber-700">
                               {formatDate(w.warrantyExpiry)}
@@ -379,7 +381,7 @@ export function OperationsTab() {
                           </TableCell>
                         </TableRow>
                       )) : (
-                        <TableRow><TableCell colSpan={4} className="h-20 text-center text-muted-foreground">Không có bảo hành sắp hết hạn</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={5} className="h-20 text-center text-muted-foreground">Không có bảo hành sắp hết hạn</TableCell></TableRow>
                       )}
                     </TableBody>
                   </Table>
@@ -400,6 +402,7 @@ export function OperationsTab() {
                         <TableHead>Khách hàng</TableHead>
                         <TableHead>SĐT</TableHead>
                         <TableHead>Sản phẩm</TableHead>
+                        <TableHead>Mã BH nguồn</TableHead>
                         <TableHead>Ngày hết hạn</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -408,7 +411,8 @@ export function OperationsTab() {
                         <TableRow key={w.orderId}>
                           <TableCell className="font-medium">{w.customerName}</TableCell>
                           <TableCell className="text-sm">{w.phone}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{w.productTypeName ?? w.supplySourceName ?? "-"}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{w.customProductName ?? w.productTypeName ?? w.supplySourceName ?? "-"}</TableCell>
+                          <TableCell className="text-sm font-mono text-muted-foreground">{w.warrantyCode ?? "-"}</TableCell>
                           <TableCell>
                             <Badge variant="destructive" className="text-xs">
                               {formatDate(w.warrantyExpiry)}
@@ -416,7 +420,7 @@ export function OperationsTab() {
                           </TableCell>
                         </TableRow>
                       )) : (
-                        <TableRow><TableCell colSpan={4} className="h-20 text-center text-muted-foreground">Không có bảo hành hết hạn</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={5} className="h-20 text-center text-muted-foreground">Không có bảo hành hết hạn</TableCell></TableRow>
                       )}
                     </TableBody>
                   </Table>
