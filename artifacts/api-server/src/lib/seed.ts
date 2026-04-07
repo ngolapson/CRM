@@ -9,13 +9,46 @@ import {
   customersTable,
   ordersTable,
 } from "@workspace/db/schema";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+
+const ADMIN_USERNAME = "admin";
+const ADMIN_DEFAULT_PASSWORD = "admin123";
+
+export async function ensureAdminAccount() {
+  const existing = await db
+    .select({ id: employeesTable.id, username: employeesTable.username, passwordHash: employeesTable.passwordHash })
+    .from(employeesTable)
+    .where(eq(employeesTable.isProtected, true))
+    .limit(1);
+
+  if (existing.length === 0) {
+    const hash = await bcrypt.hash(ADMIN_DEFAULT_PASSWORD, 10);
+    await db.insert(employeesTable).values({
+      name: "Administrator",
+      role: "Admin",
+      isProtected: true,
+      username: ADMIN_USERNAME,
+      passwordHash: hash,
+    });
+    return;
+  }
+
+  const admin = existing[0]!;
+  if (!admin.username || !admin.passwordHash) {
+    const hash = await bcrypt.hash(ADMIN_DEFAULT_PASSWORD, 10);
+    await db.update(employeesTable)
+      .set({ username: ADMIN_USERNAME, passwordHash: hash })
+      .where(eq(employeesTable.id, admin.id));
+  }
+}
 
 export async function seedIfEmpty() {
   const existing = await db.select({ id: customersTable.id }).from(customersTable).limit(1);
   if (existing.length > 0) return;
 
-  const [emp1] = await db.insert(employeesTable).values({ name: "Administrator", role: "Admin", isProtected: true }).returning();
+  const hash = await bcrypt.hash(ADMIN_DEFAULT_PASSWORD, 10);
+  const [emp1] = await db.insert(employeesTable).values({ name: "Administrator", role: "Admin", isProtected: true, username: ADMIN_USERNAME, passwordHash: hash }).returning();
   const [emp2] = await db.insert(employeesTable).values({ name: "Ngô Lập Sơn", role: "Nhân viên", isProtected: false }).returning();
   const [emp3] = await db.insert(employeesTable).values({ name: "Trần Thị Mai", role: "Nhân viên", isProtected: false }).returning();
 
