@@ -10,7 +10,7 @@ import {
   supplySourcesTable,
   productsTable,
 } from "@workspace/db/schema";
-import { eq, and, sql, desc, SQL } from "drizzle-orm";
+import { eq, and, sql, desc, ilike, or, SQL } from "drizzle-orm";
 
 const router = Router();
 
@@ -109,6 +109,8 @@ router.get("/customers", async (req, res) => {
   const needFollowUp = req.query.needFollowUp === "true";
   const offset = (page - 1) * pageSize;
 
+  const search = req.query.search ? String(req.query.search).trim() : undefined;
+
   const conditions: SQL[] = [];
   if (statusId) conditions.push(eq(customersTable.statusId, statusId));
   if (employeeId) conditions.push(eq(customersTable.employeeId, employeeId));
@@ -116,6 +118,12 @@ router.get("/customers", async (req, res) => {
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
     conditions.push(sql`${customersTable.nextContactAt} <= ${sevenDaysFromNow}`);
+  }
+  if (search) {
+    conditions.push(or(
+      ilike(customersTable.name, `%${search}%`),
+      ilike(customersTable.phone, `%${search}%`),
+    ) as SQL);
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

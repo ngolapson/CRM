@@ -88,7 +88,18 @@ export function CustomerDialog({
       createdAt: customer.createdAt?.substring(0, 10),
       lastContactAt: customer.lastContactAt?.substring(0, 10),
       nextContactAt: customer.nextContactAt?.substring(0, 10),
-      orders: [], 
+      orders: (customer.orders ?? []).map(o => ({
+        closedAt: o.closedAt?.substring(0, 10) ?? null,
+        orderCode: o.orderCode ?? null,
+        productTypeId: o.productTypeId ?? null,
+        supplySourceId: o.supplySourceId ?? null,
+        productId: o.productId ?? null,
+        customProductName: o.customProductName ?? null,
+        revenue: o.revenue ?? 0,
+        profit: o.profit ?? 0,
+        warrantyMonths: o.warrantyMonths ?? null,
+        note: o.note ?? null,
+      })),
     } : {
       name: "",
       phone: "",
@@ -298,8 +309,7 @@ export function CustomerDialog({
               />
             </div>
 
-            {!customer && (
-              <div className="space-y-4">
+            <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-amber-600 uppercase">Thông tin đơn hàng</h3>
                   <Button 
@@ -491,8 +501,7 @@ export function CustomerDialog({
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
+            </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

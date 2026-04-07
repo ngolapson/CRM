@@ -151,13 +151,16 @@ export function ReportsTab() {
               <div className="h-[250px]">
                 {customersByEmployee && customersByEmployee.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={customersByEmployee}>
+                    <BarChart data={customersByEmployee.map(e => ({
+                      ...e,
+                      total: Object.values(e.statusBreakdown ?? {}).reduce((s, v) => s + v, 0),
+                    }))}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="employeeName" fontSize={12} />
                       <YAxis fontSize={12} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="statusBreakdown.Tổng" name="Tổng KH" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="total" name="Tổng KH" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
