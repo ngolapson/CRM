@@ -60,6 +60,8 @@ export function GenericDialog({
                         <Input type="color" className="h-10 p-1 w-full" {...formField} value={String(formField.value ?? "#6b7280")} />
                       ) : field.type === "number" ? (
                         <Input type="number" {...formField} value={String(formField.value ?? "")} />
+                      ) : field.type === "password" ? (
+                        <Input type="password" placeholder={`Nhập ${field.label.toLowerCase()}...`} {...formField} value={String(formField.value ?? "")} />
                       ) : (
                         <Input placeholder={`Nhập ${field.label.toLowerCase()}...`} {...formField} value={String(formField.value ?? "")} />
                       )}

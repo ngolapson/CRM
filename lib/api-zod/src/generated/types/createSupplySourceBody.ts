@@ -9,4 +9,7 @@
 export interface CreateSupplySourceBody {
   name: string;
   inventoryValue?: number;
+  phone?: string | null;
+  email?: string | null;
+  note?: string | null;
 }

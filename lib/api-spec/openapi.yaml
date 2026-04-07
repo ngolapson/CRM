@@ -442,6 +442,60 @@ paths:
                 $ref: "#/components/schemas/SuccessResponse"
 
   # ========================
+  # STOCK RECEIPTS
+  # ========================
+  /stock-receipts:
+    get:
+      operationId: listStockReceipts
+      tags: [products]
+      summary: List all stock receipts
+      responses:
+        "200":
+          description: List of stock receipts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StockReceipt"
+    post:
+      operationId: createStockReceipt
+      tags: [products]
+      summary: Create stock receipt (increments product quantity)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStockReceiptBody"
+      responses:
+        "201":
+          description: Stock receipt created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockReceipt"
+
+  /stock-receipts/{id}:
+    delete:
+      operationId: deleteStockReceipt
+      tags: [products]
+      summary: Delete stock receipt (decrements product quantity)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ========================
   # PRODUCTS / INVENTORY
   # ========================
   /products:
@@ -948,6 +1002,18 @@ components:
           type: string
         isProtected:
           type: boolean
+        position:
+          type: string
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+        managerId:
+          type: integer
+          nullable: true
         createdAt:
           type: string
       required: [id, name, role]
@@ -959,6 +1025,20 @@ components:
           type: string
         role:
           type: string
+        position:
+          type: string
+        username:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+        managerId:
+          type: integer
+          nullable: true
       required: [name, role]
 
     # ========================
@@ -1052,6 +1132,15 @@ components:
           type: string
         inventoryValue:
           type: integer
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
       required: [id, name]
 
     CreateSupplySourceBody:
@@ -1061,7 +1150,61 @@ components:
           type: string
         inventoryValue:
           type: integer
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
       required: [name]
+
+    # ========================
+    # STOCK RECEIPT
+    # ========================
+    StockReceipt:
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        productName:
+          type: string
+          nullable: true
+        productTypeName:
+          type: string
+          nullable: true
+        supplySourceName:
+          type: string
+          nullable: true
+        quantity:
+          type: integer
+        importDate:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, productId, quantity]
+
+    CreateStockReceiptBody:
+      type: object
+      properties:
+        productId:
+          type: integer
+        quantity:
+          type: integer
+        importDate:
+          type: string
+        note:
+          type: string
+          nullable: true
+      required: [productId, quantity, importDate]
 
     # ========================
     # PRODUCT

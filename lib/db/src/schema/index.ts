@@ -4,5 +4,6 @@ export * from "./customerSources";
 export * from "./productTypes";
 export * from "./supplySources";
 export * from "./products";
+export * from "./stockReceipts";
 export * from "./customers";
 export * from "./orders";

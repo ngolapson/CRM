@@ -9,4 +9,9 @@
 export interface CreateEmployeeBody {
   name: string;
   role: string;
+  position?: string;
+  username?: string | null;
+  password?: string | null;
+  photoUrl?: string | null;
+  managerId?: number | null;
 }

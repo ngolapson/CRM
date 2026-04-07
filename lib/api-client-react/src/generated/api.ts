@@ -23,6 +23,7 @@ import type {
   CreateEmployeeBody,
   CreateProductBody,
   CreateProductTypeBody,
+  CreateStockReceiptBody,
   CreateSupplySourceBody,
   Customer,
   CustomerListResponse,
@@ -49,6 +50,7 @@ import type {
   SalesTrendItem,
   SourceCustomerStats,
   StatusDistributionItem,
+  StockReceipt,
   SuccessResponse,
   SupplySource,
   TodayStats,
@@ -1889,6 +1891,251 @@ export const useDeleteSupplySource = <
   TContext
 > => {
   return useMutation(getDeleteSupplySourceMutationOptions(options));
+};
+
+/**
+ * @summary List all stock receipts
+ */
+export const getListStockReceiptsUrl = () => {
+  return `/api/stock-receipts`;
+};
+
+export const listStockReceipts = async (
+  options?: RequestInit,
+): Promise<StockReceipt[]> => {
+  return customFetch<StockReceipt[]>(getListStockReceiptsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListStockReceiptsQueryKey = () => {
+  return [`/api/stock-receipts`] as const;
+};
+
+export const getListStockReceiptsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listStockReceipts>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listStockReceipts>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListStockReceiptsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listStockReceipts>>
+  > = ({ signal }) => listStockReceipts({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listStockReceipts>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListStockReceiptsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listStockReceipts>>
+>;
+export type ListStockReceiptsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all stock receipts
+ */
+
+export function useListStockReceipts<
+  TData = Awaited<ReturnType<typeof listStockReceipts>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listStockReceipts>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListStockReceiptsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create stock receipt (increments product quantity)
+ */
+export const getCreateStockReceiptUrl = () => {
+  return `/api/stock-receipts`;
+};
+
+export const createStockReceipt = async (
+  createStockReceiptBody: CreateStockReceiptBody,
+  options?: RequestInit,
+): Promise<StockReceipt> => {
+  return customFetch<StockReceipt>(getCreateStockReceiptUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createStockReceiptBody),
+  });
+};
+
+export const getCreateStockReceiptMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createStockReceipt>>,
+    TError,
+    { data: BodyType<CreateStockReceiptBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createStockReceipt>>,
+  TError,
+  { data: BodyType<CreateStockReceiptBody> },
+  TContext
+> => {
+  const mutationKey = ["createStockReceipt"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createStockReceipt>>,
+    { data: BodyType<CreateStockReceiptBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createStockReceipt(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateStockReceiptMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createStockReceipt>>
+>;
+export type CreateStockReceiptMutationBody = BodyType<CreateStockReceiptBody>;
+export type CreateStockReceiptMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create stock receipt (increments product quantity)
+ */
+export const useCreateStockReceipt = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createStockReceipt>>,
+    TError,
+    { data: BodyType<CreateStockReceiptBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createStockReceipt>>,
+  TError,
+  { data: BodyType<CreateStockReceiptBody> },
+  TContext
+> => {
+  return useMutation(getCreateStockReceiptMutationOptions(options));
+};
+
+/**
+ * @summary Delete stock receipt (decrements product quantity)
+ */
+export const getDeleteStockReceiptUrl = (id: number) => {
+  return `/api/stock-receipts/${id}`;
+};
+
+export const deleteStockReceipt = async (
+  id: number,
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getDeleteStockReceiptUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteStockReceiptMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteStockReceipt>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteStockReceipt>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteStockReceipt"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteStockReceipt>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteStockReceipt(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteStockReceiptMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteStockReceipt>>
+>;
+
+export type DeleteStockReceiptMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete stock receipt (decrements product quantity)
+ */
+export const useDeleteStockReceipt = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteStockReceipt>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteStockReceipt>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteStockReceiptMutationOptions(options));
 };
 
 /**

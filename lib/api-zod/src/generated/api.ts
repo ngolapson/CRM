@@ -22,6 +22,10 @@ export const ListEmployeesResponseItem = zod.object({
   name: zod.string(),
   role: zod.string(),
   isProtected: zod.boolean().optional(),
+  position: zod.string().nullish(),
+  username: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  managerId: zod.number().nullish(),
   createdAt: zod.string().optional(),
 });
 export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem);
@@ -32,6 +36,11 @@ export const ListEmployeesResponse = zod.array(ListEmployeesResponseItem);
 export const CreateEmployeeBody = zod.object({
   name: zod.string(),
   role: zod.string(),
+  position: zod.string().optional(),
+  username: zod.string().nullish(),
+  password: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  managerId: zod.number().nullish(),
 });
 
 /**
@@ -44,6 +53,11 @@ export const UpdateEmployeeParams = zod.object({
 export const UpdateEmployeeBody = zod.object({
   name: zod.string(),
   role: zod.string(),
+  position: zod.string().optional(),
+  username: zod.string().nullish(),
+  password: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  managerId: zod.number().nullish(),
 });
 
 export const UpdateEmployeeResponse = zod.object({
@@ -51,6 +65,10 @@ export const UpdateEmployeeResponse = zod.object({
   name: zod.string(),
   role: zod.string(),
   isProtected: zod.boolean().optional(),
+  position: zod.string().nullish(),
+  username: zod.string().nullish(),
+  photoUrl: zod.string().nullish(),
+  managerId: zod.number().nullish(),
   createdAt: zod.string().optional(),
 });
 
@@ -243,6 +261,9 @@ export const ListSupplySourcesResponseItem = zod.object({
   id: zod.number(),
   name: zod.string(),
   inventoryValue: zod.number().optional(),
+  phone: zod.string().nullish(),
+  email: zod.string().nullish(),
+  note: zod.string().nullish(),
 });
 export const ListSupplySourcesResponse = zod.array(
   ListSupplySourcesResponseItem,
@@ -254,6 +275,9 @@ export const ListSupplySourcesResponse = zod.array(
 export const CreateSupplySourceBody = zod.object({
   name: zod.string(),
   inventoryValue: zod.number().optional(),
+  phone: zod.string().nullish(),
+  email: zod.string().nullish(),
+  note: zod.string().nullish(),
 });
 
 /**
@@ -266,12 +290,18 @@ export const UpdateSupplySourceParams = zod.object({
 export const UpdateSupplySourceBody = zod.object({
   name: zod.string(),
   inventoryValue: zod.number().optional(),
+  phone: zod.string().nullish(),
+  email: zod.string().nullish(),
+  note: zod.string().nullish(),
 });
 
 export const UpdateSupplySourceResponse = zod.object({
   id: zod.number(),
   name: zod.string(),
   inventoryValue: zod.number().optional(),
+  phone: zod.string().nullish(),
+  email: zod.string().nullish(),
+  note: zod.string().nullish(),
 });
 
 /**
@@ -282,6 +312,46 @@ export const DeleteSupplySourceParams = zod.object({
 });
 
 export const DeleteSupplySourceResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
+});
+
+/**
+ * @summary List all stock receipts
+ */
+export const ListStockReceiptsResponseItem = zod.object({
+  id: zod.number(),
+  productId: zod.number(),
+  productName: zod.string().nullish(),
+  productTypeName: zod.string().nullish(),
+  supplySourceName: zod.string().nullish(),
+  quantity: zod.number(),
+  importDate: zod.string().nullish(),
+  note: zod.string().nullish(),
+  createdAt: zod.string().optional(),
+});
+export const ListStockReceiptsResponse = zod.array(
+  ListStockReceiptsResponseItem,
+);
+
+/**
+ * @summary Create stock receipt (increments product quantity)
+ */
+export const CreateStockReceiptBody = zod.object({
+  productId: zod.number(),
+  quantity: zod.number(),
+  importDate: zod.string(),
+  note: zod.string().nullish(),
+});
+
+/**
+ * @summary Delete stock receipt (decrements product quantity)
+ */
+export const DeleteStockReceiptParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteStockReceiptResponse = zod.object({
   success: zod.boolean(),
   message: zod.string().optional(),
 });

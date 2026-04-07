@@ -11,5 +11,9 @@ export interface Employee {
   name: string;
   role: string;
   isProtected?: boolean;
+  position?: string | null;
+  username?: string | null;
+  photoUrl?: string | null;
+  managerId?: number | null;
   createdAt?: string;
 }

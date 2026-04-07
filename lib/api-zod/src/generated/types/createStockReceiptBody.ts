@@ -6,11 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface SupplySource {
-  id: number;
-  name: string;
-  inventoryValue?: number;
-  phone?: string | null;
-  email?: string | null;
+export interface CreateStockReceiptBody {
+  productId: number;
+  quantity: number;
+  importDate: string;
   note?: string | null;
 }

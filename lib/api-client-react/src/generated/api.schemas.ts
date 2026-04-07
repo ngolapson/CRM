@@ -23,12 +23,21 @@ export interface Employee {
   name: string;
   role: string;
   isProtected?: boolean;
+  position?: string | null;
+  username?: string | null;
+  photoUrl?: string | null;
+  managerId?: number | null;
   createdAt?: string;
 }
 
 export interface CreateEmployeeBody {
   name: string;
   role: string;
+  position?: string;
+  username?: string | null;
+  password?: string | null;
+  photoUrl?: string | null;
+  managerId?: number | null;
 }
 
 export interface CustomerStatus {
@@ -73,11 +82,36 @@ export interface SupplySource {
   id: number;
   name: string;
   inventoryValue?: number;
+  phone?: string | null;
+  email?: string | null;
+  note?: string | null;
 }
 
 export interface CreateSupplySourceBody {
   name: string;
   inventoryValue?: number;
+  phone?: string | null;
+  email?: string | null;
+  note?: string | null;
+}
+
+export interface StockReceipt {
+  id: number;
+  productId: number;
+  productName?: string | null;
+  productTypeName?: string | null;
+  supplySourceName?: string | null;
+  quantity: number;
+  importDate?: string | null;
+  note?: string | null;
+  createdAt?: string;
+}
+
+export interface CreateStockReceiptBody {
+  productId: number;
+  quantity: number;
+  importDate: string;
+  note?: string | null;
 }
 
 export interface Product {
