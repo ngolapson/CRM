@@ -269,6 +269,17 @@ router.put("/customers/:id", async (req, res) => {
 
 router.delete("/customers/:id", async (req, res) => {
   const id = Number(req.params.id);
+  const existingOrders = await db
+    .select({ productId: ordersTable.productId })
+    .from(ordersTable)
+    .where(eq(ordersTable.customerId, id));
+  for (const order of existingOrders) {
+    if (order.productId) {
+      await db.update(productsTable)
+        .set({ quantity: sql`${productsTable.quantity} + 1` })
+        .where(eq(productsTable.id, order.productId));
+    }
+  }
   await db.delete(ordersTable).where(eq(ordersTable.customerId, id));
   await db.delete(customersTable).where(eq(customersTable.id, id));
   res.json({ success: true, message: "Deleted" });
