@@ -18,9 +18,14 @@ export interface Order {
   productId?: number | null;
   productName?: string | null;
   customProductName?: string | null;
+  quantity?: number;
+  sellPrice?: number;
+  costPrice?: number;
   revenue: number;
   profit: number;
   warrantyMonths?: number | null;
+  warrantySourceMonths?: number | null;
+  warrantyCode?: string | null;
   warrantyExpiry?: string | null;
   note?: string | null;
   createdAt?: string;

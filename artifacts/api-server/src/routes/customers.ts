@@ -21,9 +21,14 @@ interface OrderInput {
   supplySourceId?: number | null;
   productId?: number | null;
   customProductName?: string | null;
+  quantity?: number;
+  sellPrice?: number;
+  costPrice?: number;
   revenue?: number;
   profit?: number;
   warrantyMonths?: number | null;
+  warrantySourceMonths?: number | null;
+  warrantyCode?: string | null;
   note?: string | null;
 }
 
@@ -68,9 +73,14 @@ async function getCustomerWithOrders(customerId: number) {
       productId: ordersTable.productId,
       productName: productsTable.name,
       customProductName: ordersTable.customProductName,
+      quantity: ordersTable.quantity,
+      sellPrice: ordersTable.sellPrice,
+      costPrice: ordersTable.costPrice,
       revenue: ordersTable.revenue,
       profit: ordersTable.profit,
       warrantyMonths: ordersTable.warrantyMonths,
+      warrantySourceMonths: ordersTable.warrantySourceMonths,
+      warrantyCode: ordersTable.warrantyCode,
       warrantyExpiry: ordersTable.warrantyExpiry,
       note: ordersTable.note,
       createdAt: ordersTable.createdAt,
@@ -176,9 +186,14 @@ async function insertOrders(customerId: number, orders: OrderInput[]): Promise<v
       supplySourceId: order.supplySourceId ?? null,
       productId: order.productId ?? null,
       customProductName: order.customProductName ?? null,
+      quantity: order.quantity ?? 1,
+      sellPrice: order.sellPrice ?? 0,
+      costPrice: order.costPrice ?? 0,
       revenue: order.revenue ?? 0,
       profit: order.profit ?? 0,
       warrantyMonths: order.warrantyMonths ?? null,
+      warrantySourceMonths: order.warrantySourceMonths ?? null,
+      warrantyCode: order.warrantyCode ?? null,
       warrantyExpiry,
       note: order.note ?? null,
     });

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ type SubTab = "hom-nay" | "ban-hang" | "lai-lo" | "kho-hang" | "bao-hanh";
 
 export function OperationsTab() {
   const [activeTab, setActiveTab] = useState<SubTab>("hom-nay");
+  const [, setLocation] = useLocation();
 
   const { data: stats, isLoading: isLoadingStats } = useGetTodayStats();
   const { data: trend, isLoading: isLoadingTrend } = useGetSalesTrend();
@@ -132,19 +134,19 @@ export function OperationsTab() {
                 <CardTitle className="text-base font-semibold">Thao tác nhanh</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <Button className="w-full justify-start h-12" variant="default">
+                <Button className="w-full justify-start h-12" variant="default" onClick={() => setLocation("/")}>
                   <Plus className="w-5 h-5 mr-3 opacity-80" />
                   <span className="font-semibold">+ Tạo đơn mới</span>
                 </Button>
-                <Button className="w-full justify-start h-12" variant="outline">
+                <Button className="w-full justify-start h-12" variant="outline" onClick={() => setActiveTab("kho-hang")}>
                   <Package className="w-5 h-5 mr-3 text-muted-foreground" />
                   <span className="font-medium">Nhập kho</span>
                 </Button>
-                <Button className="w-full justify-start h-12" variant="outline">
+                <Button className="w-full justify-start h-12" variant="outline" onClick={() => setActiveTab("kho-hang")}>
                   <Package className="w-5 h-5 mr-3 text-muted-foreground" />
                   <span className="font-medium">Xem kho hàng</span>
                 </Button>
-                <Button className="w-full justify-start h-12" variant="outline">
+                <Button className="w-full justify-start h-12" variant="outline" onClick={() => setLocation("/bao-cao")}>
                   <FileText className="w-5 h-5 mr-3 text-muted-foreground" />
                   <span className="font-medium">Báo cáo chi tiết</span>
                   <ArrowRight className="w-4 h-4 ml-auto opacity-50" />

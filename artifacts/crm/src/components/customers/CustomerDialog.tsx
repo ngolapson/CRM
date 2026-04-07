@@ -31,9 +31,14 @@ const orderSchema = z.object({
   supplySourceId: z.coerce.number().optional().nullable(),
   productId: z.coerce.number().optional().nullable(),
   customProductName: z.string().optional().nullable(),
+  quantity: z.coerce.number().min(1).default(1),
+  sellPrice: z.coerce.number().min(0).default(0),
+  costPrice: z.coerce.number().min(0).default(0),
   revenue: z.coerce.number().min(0),
   profit: z.coerce.number(),
   warrantyMonths: z.coerce.number().optional().nullable(),
+  warrantySourceMonths: z.coerce.number().optional().nullable(),
+  warrantyCode: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
 });
 
@@ -95,9 +100,14 @@ export function CustomerDialog({
         supplySourceId: o.supplySourceId ?? null,
         productId: o.productId ?? null,
         customProductName: o.customProductName ?? null,
+        quantity: o.quantity ?? 1,
+        sellPrice: o.sellPrice ?? 0,
+        costPrice: o.costPrice ?? 0,
         revenue: o.revenue ?? 0,
         profit: o.profit ?? 0,
         warrantyMonths: o.warrantyMonths ?? null,
+        warrantySourceMonths: o.warrantySourceMonths ?? null,
+        warrantyCode: o.warrantyCode ?? null,
         note: o.note ?? null,
       })),
     } : {
@@ -316,7 +326,7 @@ export function CustomerDialog({
                     type="button" 
                     variant="outline" 
                     size="sm"
-                    onClick={() => appendOrder({ revenue: 0, profit: 0 })}
+                    onClick={() => appendOrder({ quantity: 1, sellPrice: 0, costPrice: 0, revenue: 0, profit: 0 })}
                   >
                     <Plus className="w-4 h-4 mr-1" /> Thêm đơn hàng
                   </Button>
@@ -442,13 +452,75 @@ export function CustomerDialog({
                       />
                     </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`orders.${index}.quantity`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>SỐ LƯỢNG</FormLabel>
+                            <FormControl>
+                              <Input type="number" min={1} {...field} onChange={(e) => {
+                                field.onChange(e);
+                                const qty = Number(e.target.value) || 1;
+                                const sp = Number(form.getValues(`orders.${index}.sellPrice`)) || 0;
+                                const cp = Number(form.getValues(`orders.${index}.costPrice`)) || 0;
+                                form.setValue(`orders.${index}.revenue`, qty * sp);
+                                form.setValue(`orders.${index}.profit`, qty * (sp - cp));
+                              }} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`orders.${index}.sellPrice`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>GIÁ BÁN / ĐƠN VỊ</FormLabel>
+                            <FormControl>
+                              <Input type="number" min={0} {...field} onChange={(e) => {
+                                field.onChange(e);
+                                const qty = Number(form.getValues(`orders.${index}.quantity`)) || 1;
+                                const sp = Number(e.target.value) || 0;
+                                const cp = Number(form.getValues(`orders.${index}.costPrice`)) || 0;
+                                form.setValue(`orders.${index}.revenue`, qty * sp);
+                                form.setValue(`orders.${index}.profit`, qty * (sp - cp));
+                              }} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`orders.${index}.costPrice`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>GIÁ VỐN / ĐƠN VỊ</FormLabel>
+                            <FormControl>
+                              <Input type="number" min={0} {...field} onChange={(e) => {
+                                field.onChange(e);
+                                const qty = Number(form.getValues(`orders.${index}.quantity`)) || 1;
+                                const sp = Number(form.getValues(`orders.${index}.sellPrice`)) || 0;
+                                const cp = Number(e.target.value) || 0;
+                                form.setValue(`orders.${index}.profit`, qty * (sp - cp));
+                              }} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name={`orders.${index}.revenue`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>DOANH THU</FormLabel>
+                            <FormLabel>DOANH THU (TỰ TÍNH)</FormLabel>
                             <FormControl>
                               <Input type="number" {...field} />
                             </FormControl>
@@ -461,7 +533,7 @@ export function CustomerDialog({
                         name={`orders.${index}.profit`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>LỢI NHUẬN</FormLabel>
+                            <FormLabel>LỢI NHUẬN (TỰ TÍNH)</FormLabel>
                             <FormControl>
                               <Input type="number" {...field} />
                             </FormControl>
@@ -471,13 +543,13 @@ export function CustomerDialog({
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
                         name={`orders.${index}.warrantyMonths`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>BẢO HÀNH (THÁNG)</FormLabel>
+                            <FormLabel>BẢO HÀNH KH (THÁNG)</FormLabel>
                             <FormControl>
                               <Input type="number" {...field} value={field.value || ""} />
                             </FormControl>
@@ -485,6 +557,35 @@ export function CustomerDialog({
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name={`orders.${index}.warrantySourceMonths`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>BẢO HÀNH NGUỒN (THÁNG)</FormLabel>
+                            <FormControl>
+                              <Input type="number" {...field} value={field.value || ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`orders.${index}.warrantyCode`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>MÃ BẢO HÀNH NGUỒN</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Mã bảo hành..." {...field} value={field.value || ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
                       <FormField
                         control={form.control}
                         name={`orders.${index}.note`}

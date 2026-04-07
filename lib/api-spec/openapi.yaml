@@ -1255,12 +1255,24 @@ components:
         customProductName:
           type: string
           nullable: true
+        quantity:
+          type: integer
+        sellPrice:
+          type: integer
+        costPrice:
+          type: integer
         revenue:
           type: integer
         profit:
           type: integer
         warrantyMonths:
           type: integer
+          nullable: true
+        warrantySourceMonths:
+          type: integer
+          nullable: true
+        warrantyCode:
+          type: string
           nullable: true
         warrantyExpiry:
           type: string
@@ -1293,12 +1305,24 @@ components:
         customProductName:
           type: string
           nullable: true
+        quantity:
+          type: integer
+        sellPrice:
+          type: integer
+        costPrice:
+          type: integer
         revenue:
           type: integer
         profit:
           type: integer
         warrantyMonths:
           type: integer
+          nullable: true
+        warrantySourceMonths:
+          type: integer
+          nullable: true
+        warrantyCode:
+          type: string
           nullable: true
         note:
           type: string

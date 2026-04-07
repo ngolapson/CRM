@@ -13,8 +13,13 @@ export interface CreateOrderBody {
   supplySourceId?: number | null;
   productId?: number | null;
   customProductName?: string | null;
+  quantity?: number;
+  sellPrice?: number;
+  costPrice?: number;
   revenue: number;
   profit: number;
   warrantyMonths?: number | null;
+  warrantySourceMonths?: number | null;
+  warrantyCode?: string | null;
   note?: string | null;
 }

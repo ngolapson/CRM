@@ -346,6 +346,7 @@ export function SettingsTab() {
 
       {dialogState.open && dialogProps && (
         <GenericDialog
+          key={`${dialogState.type}-${(dialogState.entity as { id?: number } | null)?.id ?? "new"}`}
           open={dialogState.open}
           onOpenChange={(open) => setDialogState({ ...dialogState, open })}
           title={dialogProps.title}

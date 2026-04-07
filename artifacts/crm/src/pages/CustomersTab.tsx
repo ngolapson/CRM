@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,6 +30,17 @@ export function CustomersTab() {
   const [employeeId, setEmployeeId] = useState<number | undefined>();
   const [needFollowUp, setNeedFollowUp] = useState<boolean>(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+    return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
+  }, [search]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
@@ -44,11 +55,11 @@ export function CustomersTab() {
     statusId,
     employeeId,
     needFollowUp,
-    search: search || undefined
+    search: debouncedSearch || undefined
   }, {
     query: {
       enabled: true,
-      queryKey: getListCustomersQueryKey({ page, pageSize, statusId, employeeId, needFollowUp, search })
+      queryKey: getListCustomersQueryKey({ page, pageSize, statusId, employeeId, needFollowUp, search: debouncedSearch })
     }
   });
 
@@ -109,7 +120,7 @@ export function CustomersTab() {
               data-testid="input-search-customer"
             />
             
-            <Select value={statusId?.toString() || "all"} onValueChange={(val) => setStatusId(val === "all" ? undefined : Number(val))}>
+            <Select value={statusId?.toString() || "all"} onValueChange={(val) => { setStatusId(val === "all" ? undefined : Number(val)); setPage(1); }}>
               <SelectTrigger className="h-9 w-[160px]" data-testid="select-status-filter">
                 <SelectValue placeholder="Tất cả trạng thái" />
               </SelectTrigger>
@@ -121,7 +132,7 @@ export function CustomersTab() {
               </SelectContent>
             </Select>
 
-            <Select value={employeeId?.toString() || "all"} onValueChange={(val) => setEmployeeId(val === "all" ? undefined : Number(val))}>
+            <Select value={employeeId?.toString() || "all"} onValueChange={(val) => { setEmployeeId(val === "all" ? undefined : Number(val)); setPage(1); }}>
               <SelectTrigger className="h-9 w-[160px]" data-testid="select-employee-filter">
                 <SelectValue placeholder="Tất cả nhân viên" />
               </SelectTrigger>
@@ -137,7 +148,7 @@ export function CustomersTab() {
               <Checkbox 
                 id="needFollowUp" 
                 checked={needFollowUp}
-                onCheckedChange={(checked) => setNeedFollowUp(checked === true)}
+                onCheckedChange={(checked) => { setNeedFollowUp(checked === true); setPage(1); }}
                 data-testid="checkbox-need-followup"
               />
               <label htmlFor="needFollowUp" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
