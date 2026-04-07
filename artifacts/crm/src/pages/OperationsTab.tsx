@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   useGetTodayStats, useGetSalesTrend, useGetInventorySummary,
@@ -11,10 +12,10 @@ import {
 } from "@workspace/api-client-react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
-  Line, LineChart, Bar, BarChart, Area, AreaChart,
+  Bar, BarChart, Area, AreaChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Legend,
 } from "recharts";
-import { Package, TrendingUp, DollarSign, Shield, AlertTriangle } from "lucide-react";
+import { Package, TrendingUp, DollarSign, Shield, AlertTriangle, Plus, FileText, ArrowRight } from "lucide-react";
 
 type SubTab = "hom-nay" | "ban-hang" | "lai-lo" | "kho-hang" | "bao-hanh";
 
@@ -94,7 +95,8 @@ export function OperationsTab() {
               </Card>
             </div>
 
-            <Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="text-base font-semibold">Xu hướng bán hàng (7 ngày gần nhất)</CardTitle>
               </CardHeader>
@@ -124,6 +126,32 @@ export function OperationsTab() {
                 </div>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-semibold">Thao tác nhanh</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <Button className="w-full justify-start h-12" variant="default">
+                  <Plus className="w-5 h-5 mr-3 opacity-80" />
+                  <span className="font-semibold">+ Tạo đơn mới</span>
+                </Button>
+                <Button className="w-full justify-start h-12" variant="outline">
+                  <Package className="w-5 h-5 mr-3 text-muted-foreground" />
+                  <span className="font-medium">Nhập kho</span>
+                </Button>
+                <Button className="w-full justify-start h-12" variant="outline">
+                  <Package className="w-5 h-5 mr-3 text-muted-foreground" />
+                  <span className="font-medium">Xem kho hàng</span>
+                </Button>
+                <Button className="w-full justify-start h-12" variant="outline">
+                  <FileText className="w-5 h-5 mr-3 text-muted-foreground" />
+                  <span className="font-medium">Báo cáo chi tiết</span>
+                  <ArrowRight className="w-4 h-4 ml-auto opacity-50" />
+                </Button>
+              </CardContent>
+            </Card>
+            </div>
           </div>
         )}
 

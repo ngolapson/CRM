@@ -247,6 +247,17 @@ router.put("/customers/:id", async (req, res) => {
   }).where(eq(customersTable.id, id));
 
   if (orders !== undefined) {
+    const existingOrders = await db
+      .select({ productId: ordersTable.productId })
+      .from(ordersTable)
+      .where(eq(ordersTable.customerId, id));
+    for (const existing of existingOrders) {
+      if (existing.productId) {
+        await db.update(productsTable)
+          .set({ quantity: sql`${productsTable.quantity} + 1` })
+          .where(eq(productsTable.id, existing.productId));
+      }
+    }
     await db.delete(ordersTable).where(eq(ordersTable.customerId, id));
     await insertOrders(id, orders);
   }
