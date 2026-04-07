@@ -1,5 +1,5 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearch } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Pencil, Trash2, ArrowUp, ArrowDown, Plus, Tag, Truck, Package, PackagePlus, X } from "lucide-react";
+import { Pencil, Trash2, ArrowUp, ArrowDown, Plus, Tag, Truck, Package, PackagePlus, Download, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -29,6 +29,7 @@ import {
 import { GenericDialog } from "@/components/settings/SettingsDialogs";
 import { formatCurrency, formatDate } from "@/lib/format";
 import * as z from "zod";
+import * as XLSX from "xlsx";
 
 type EntityType = "employee" | "status" | "source" | "productType" | "supplySource";
 type AnyEntity = Employee | CustomerStatus | CustomerSource | ProductType | SupplySource;
@@ -101,6 +102,9 @@ export function SettingsTab() {
   const [productForm, setProductForm] = useState<ProductFormState>({ open: false, product: null });
   const [importStock, setImportStock] = useState<ImportStockState>({ open: false, productId: null });
   const [productFilter, setProductFilter] = useState("");
+  const [productTypeFilter, setProductTypeFilter] = useState("__all__");
+  const [productSourceFilter, setProductSourceFilter] = useState("__all__");
+
   const initialSection = (() => {
     const s = new URLSearchParams(search).get("section");
     return (s === "products" || s === "receipts" || s === "entities") ? s : "entities";
@@ -117,6 +121,7 @@ export function SettingsTab() {
   const [importData, setImportData] = useState({ quantity: "", importDate: new Date().toISOString().split("T")[0], note: "" });
   const [productFormData, setProductFormData] = useState({
     name: "", productTypeId: "", supplySourceId: "", quantity: "0", costPrice: "0", sellPrice: "0", warrantyMonths: "", note: "",
+    importDate: new Date().toISOString().split("T")[0], importNote: "",
   });
 
   const handleDelete = async (type: EntityType, id: number, name: string) => {
@@ -219,9 +224,11 @@ export function SettingsTab() {
         sellPrice: String(product.sellPrice),
         warrantyMonths: product.warrantyMonths ? String(product.warrantyMonths) : "",
         note: product.note ?? "",
+        importDate: new Date().toISOString().split("T")[0],
+        importNote: "",
       });
     } else {
-      setProductFormData({ name: "", productTypeId: "", supplySourceId: "", quantity: "0", costPrice: "0", sellPrice: "0", warrantyMonths: "", note: "" });
+      setProductFormData({ name: "", productTypeId: "", supplySourceId: "", quantity: "0", costPrice: "0", sellPrice: "0", warrantyMonths: "", note: "", importDate: new Date().toISOString().split("T")[0], importNote: "" });
     }
     setProductForm({ open: true, product });
   };
@@ -229,11 +236,13 @@ export function SettingsTab() {
   const handleProductSubmit = async () => {
     if (!productFormData.name) { toast({ title: "Vui lòng nhập tên sản phẩm", variant: "destructive" }); return; }
     try {
+      const initialQty = Number(productFormData.quantity) || 0;
+      const willCreateReceipt = !productForm.product && initialQty > 0;
       const data = {
         name: productFormData.name,
         productTypeId: productFormData.productTypeId ? Number(productFormData.productTypeId) : undefined,
         supplySourceId: productFormData.supplySourceId ? Number(productFormData.supplySourceId) : undefined,
-        quantity: Number(productFormData.quantity) || 0,
+        quantity: willCreateReceipt ? 0 : initialQty,
         costPrice: Number(productFormData.costPrice) || 0,
         sellPrice: Number(productFormData.sellPrice) || 0,
         warrantyMonths: productFormData.warrantyMonths ? Number(productFormData.warrantyMonths) : undefined,
@@ -242,7 +251,18 @@ export function SettingsTab() {
       if (productForm.product) {
         await updateProduct.mutateAsync({ id: productForm.product.id, data });
       } else {
-        await createProduct.mutateAsync({ data });
+        const created = await createProduct.mutateAsync({ data });
+        if (Number(productFormData.quantity) > 0 && created?.id) {
+          await createStockReceipt.mutateAsync({
+            data: {
+              productId: created.id,
+              quantity: Number(productFormData.quantity),
+              importDate: productFormData.importDate || new Date().toISOString().split("T")[0],
+              note: productFormData.importNote || null,
+            },
+          });
+          queryClient.invalidateQueries({ queryKey: getListStockReceiptsQueryKey() });
+        }
       }
       queryClient.invalidateQueries({ queryKey: getListProductsQueryKey() });
       setProductForm({ open: false, product: null });
@@ -298,6 +318,29 @@ export function SettingsTab() {
     }
   };
 
+  const handleExportProductsExcel = useCallback(() => {
+    if (!products || products.length === 0) {
+      toast({ title: "Không có dữ liệu để xuất", variant: "destructive" });
+      return;
+    }
+    const data = products.map((p, idx) => ({
+      "STT": idx + 1,
+      "Tên sản phẩm": p.name,
+      "Loại mặt hàng": p.productTypeName ?? "",
+      "Nguồn hàng": p.supplySourceName ?? "",
+      "Tồn kho": p.quantity,
+      "Giá vốn": p.costPrice,
+      "Giá bán": p.sellPrice,
+      "Bảo hành (tháng)": p.warrantyMonths ?? "",
+      "Ghi chú": p.note ?? "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sản phẩm");
+    XLSX.writeFile(wb, `san-pham-${new Date().toISOString().split("T")[0]}.xlsx`);
+    toast({ title: "Đã xuất file Excel" });
+  }, [products, toast]);
+
   const getDialogProps = (): DialogPropsShape | null => {
     if (dialogState.type === "employee") return {
       title: dialogState.entity ? "Sửa nhân viên" : "Thêm nhân viên",
@@ -351,7 +394,13 @@ export function SettingsTab() {
   };
 
   const dialogProps = getDialogProps();
-  const filteredProducts = products?.filter(p => !productFilter || p.name.toLowerCase().includes(productFilter.toLowerCase()));
+
+  const filteredProducts = products?.filter(p => {
+    const matchSearch = !productFilter || p.name.toLowerCase().includes(productFilter.toLowerCase());
+    const matchType = productTypeFilter === "__all__" || String(p.productTypeId) === productTypeFilter;
+    const matchSource = productSourceFilter === "__all__" || String(p.supplySourceId) === productSourceFilter;
+    return matchSearch && matchType && matchSource;
+  });
 
   return (
     <MainLayout activeTab="cai-dat">
@@ -364,7 +413,7 @@ export function SettingsTab() {
         <Button
           variant={activeSettingsSection === "products" ? "default" : "outline"}
           size="sm" onClick={() => setActiveSettingsSection("products")}
-        ><Package className="w-4 h-4 mr-1" />Quản lý sản phẩm ({products?.length ?? 0})</Button>
+        ><Package className="w-4 h-4 mr-1" />Quản lý sản phẩm & kho ({products?.length ?? 0})</Button>
         <Button
           variant={activeSettingsSection === "receipts" ? "default" : "outline"}
           size="sm" onClick={() => setActiveSettingsSection("receipts")}
@@ -391,7 +440,12 @@ export function SettingsTab() {
                         {e.name}
                         {e.isProtected && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Bảo vệ</Badge>}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{e.role}{e.position && e.position !== "admin" ? ` · ${e.position}` : ""}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium mr-1 ${e.role === "Admin" ? "bg-purple-100 text-purple-700" : "bg-blue-50 text-blue-700"}`}>
+                          {e.role}
+                        </span>
+                        {e.position && <span>{e.position}</span>}
+                      </div>
                       {e.username && <div className="text-xs text-blue-600 mt-0.5">@{e.username}</div>}
                     </div>
                     <div className="flex gap-1">
@@ -511,6 +565,7 @@ export function SettingsTab() {
                         <div className="font-medium text-sm">{ss.name}</div>
                         {ss.phone && <div className="text-xs text-muted-foreground">{ss.phone}</div>}
                         {ss.email && <div className="text-xs text-blue-600">{ss.email}</div>}
+                        {ss.note && <div className="text-xs text-muted-foreground italic truncate max-w-[140px]">{ss.note}</div>}
                       </div>
                       <div className="flex gap-1 items-center">
                         <Button variant="ghost" size="icon" onClick={() => setDialogState({ open: true, type: "supplySource", entity: ss })} className="h-7 w-7 text-primary"><Pencil className="w-3.5 h-3.5" /></Button>
@@ -531,15 +586,40 @@ export function SettingsTab() {
       {/* ===== PRODUCTS ===== */}
       {activeSettingsSection === "products" && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <Input
               placeholder="Tìm kiếm sản phẩm..."
               value={productFilter}
               onChange={e => setProductFilter(e.target.value)}
-              className="max-w-xs"
+              className="max-w-[200px]"
             />
-            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => openProductForm(null)}>
-              <Plus className="w-4 h-4 mr-2" /> Thêm sản phẩm
+            <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Loại mặt hàng" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Tất cả loại</SelectItem>
+                {productTypes?.map(pt => <SelectItem key={pt.id} value={String(pt.id)}>{pt.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={productSourceFilter} onValueChange={setProductSourceFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Nguồn hàng" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Tất cả nguồn</SelectItem>
+                {supplySources?.map(ss => <SelectItem key={ss.id} value={String(ss.id)}>{ss.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <div className="flex-1" />
+            <Button variant="outline" onClick={handleExportProductsExcel} className="h-9 text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+              <FileDown className="w-4 h-4 mr-2" /> Xuất Excel
+            </Button>
+            <Button variant="outline" className="h-9" onClick={() => { setImportStock({ open: true, productId: null }); setImportData({ quantity: "", importDate: new Date().toISOString().split("T")[0], note: "" }); }}>
+              <PackagePlus className="w-4 h-4 mr-2" /> Nhập kho
+            </Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700 h-9" onClick={() => openProductForm(null)}>
+              <Plus className="w-4 h-4 mr-2" /> Thêm sản phẩm mới
             </Button>
           </div>
 
@@ -550,43 +630,46 @@ export function SettingsTab() {
                   <TableHeader className="bg-muted/50">
                     <TableRow>
                       <TableHead className="w-8">#</TableHead>
-                      <TableHead>Tên sản phẩm</TableHead>
+                      <TableHead>Tên sản phẩm/gói</TableHead>
                       <TableHead>Loại</TableHead>
-                      <TableHead>Nguồn</TableHead>
-                      <TableHead className="text-right">Tồn kho</TableHead>
+                      <TableHead>Nguồn hàng</TableHead>
+                      <TableHead className="text-right">Đã nhập</TableHead>
+                      <TableHead className="text-right">Đã bán</TableHead>
+                      <TableHead className="text-right">Còn</TableHead>
                       <TableHead className="text-right">Giá vốn</TableHead>
                       <TableHead className="text-right">Giá bán</TableHead>
-                      <TableHead className="text-center">BH (tháng)</TableHead>
                       <TableHead className="text-right">Thao tác</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredProducts && filteredProducts.length > 0 ? filteredProducts.map((p, idx) => (
-                      <TableRow key={p.id}>
-                        <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
-                        <TableCell className="font-medium">{p.name}{p.note && <div className="text-xs text-muted-foreground truncate max-w-[200px]">{p.note}</div>}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{p.productTypeName ?? "-"}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{p.supplySourceName ?? "-"}</TableCell>
-                        <TableCell className="text-right">
-                          <Badge variant={p.quantity <= 0 ? "destructive" : p.quantity <= 5 ? "outline" : "secondary"} className={p.quantity > 5 ? "" : p.quantity <= 0 ? "" : "border-amber-400 text-amber-700"}>
-                            {p.quantity}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right text-sm">{formatCurrency(p.costPrice)} đ</TableCell>
-                        <TableCell className="text-right text-sm font-medium">{formatCurrency(p.sellPrice)} đ</TableCell>
-                        <TableCell className="text-center text-sm text-muted-foreground">{p.warrantyMonths ?? "-"}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button variant="outline" size="sm" className="h-7 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50" onClick={() => { setImportStock({ open: true, productId: p.id }); setImportData({ quantity: "", importDate: new Date().toISOString().split("T")[0], note: "" }); }}>
-                              <PackagePlus className="w-3 h-3 mr-1" /> Nhập kho
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => openProductForm(p)} className="h-7 w-7 text-primary"><Pencil className="w-3.5 h-3.5" /></Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteProduct(p.id, p.name)} className="h-7 w-7 text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )) : (
-                      <TableRow><TableCell colSpan={9} className="h-24 text-center text-muted-foreground">Không có sản phẩm nào</TableCell></TableRow>
+                    {filteredProducts && filteredProducts.length > 0 ? filteredProducts.map((p, idx) => {
+                      const totalImported = stockReceipts?.filter(r => r.productId === p.id).reduce((s, r) => s + r.quantity, 0) ?? p.quantity;
+                      const totalSold = Math.max(0, totalImported - p.quantity);
+                      return (
+                        <TableRow key={p.id}>
+                          <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
+                          <TableCell className="font-medium">{p.name}{p.note && <div className="text-xs text-muted-foreground truncate max-w-[200px]">{p.note}</div>}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{p.productTypeName ?? "-"}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{p.supplySourceName ?? "-"}</TableCell>
+                          <TableCell className="text-right text-sm font-medium text-blue-600">{totalImported}</TableCell>
+                          <TableCell className="text-right text-sm text-muted-foreground">{totalSold}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant={p.quantity <= 0 ? "destructive" : p.quantity <= 5 ? "outline" : "secondary"} className={p.quantity > 5 ? "" : p.quantity <= 0 ? "" : "border-amber-400 text-amber-700"}>
+                              {p.quantity}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right text-sm">{formatCurrency(p.costPrice)} đ</TableCell>
+                          <TableCell className="text-right text-sm font-medium">{formatCurrency(p.sellPrice)} đ</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => openProductForm(p)} className="h-7 w-7 text-primary"><Pencil className="w-3.5 h-3.5" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDeleteProduct(p.id, p.name)} className="h-7 w-7 text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }) : (
+                      <TableRow><TableCell colSpan={10} className="h-24 text-center text-muted-foreground">Không có sản phẩm nào</TableCell></TableRow>
                     )}
                   </TableBody>
                 </Table>
@@ -601,7 +684,7 @@ export function SettingsTab() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">Lịch sử nhập kho ({stockReceipts?.length ?? 0} phiếu)</div>
-            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setActiveSettingsSection("products")}>
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => { setImportStock({ open: true, productId: null }); setImportData({ quantity: "", importDate: new Date().toISOString().split("T")[0], note: "" }); }}>
               <PackagePlus className="w-4 h-4 mr-2" /> Nhập kho mới
             </Button>
           </div>
@@ -644,8 +727,20 @@ export function SettingsTab() {
         </div>
       )}
 
-      {/* Generic entity dialog */}
-      {dialogState.open && dialogProps && (
+      {/* Employee dialog with dropdowns */}
+      {dialogState.open && dialogState.type === "employee" && (
+        <EmployeeDialog
+          key={`employee-${(dialogState.entity as { id?: number } | null)?.id ?? "new"}`}
+          open={dialogState.open}
+          onOpenChange={(open) => setDialogState({ ...dialogState, open })}
+          employee={dialogState.entity as Employee | null}
+          employees={employees ?? []}
+          onSubmit={handleSubmit}
+        />
+      )}
+
+      {/* Generic entity dialog (for all non-employee types) */}
+      {dialogState.open && dialogState.type !== "employee" && dialogProps && (
         <GenericDialog
           key={`${dialogState.type}-${(dialogState.entity as { id?: number } | null)?.id ?? "new"}`}
           open={dialogState.open}
@@ -662,11 +757,11 @@ export function SettingsTab() {
       <Dialog open={productForm.open} onOpenChange={(o) => setProductForm({ ...productForm, open: o })}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{productForm.product ? "Sửa sản phẩm" : "Thêm sản phẩm"}</DialogTitle>
+            <DialogTitle>{productForm.product ? "Sửa sản phẩm" : "Thêm sản phẩm mới"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-2">
             <div className="space-y-1.5">
-              <Label>Tên sản phẩm *</Label>
+              <Label>Tên sản phẩm/gói *</Label>
               <Input value={productFormData.name} onChange={e => setProductFormData({ ...productFormData, name: e.target.value })} placeholder="Nhập tên sản phẩm..." />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -691,13 +786,9 @@ export function SettingsTab() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Tồn kho ban đầu</Label>
-                <Input type="number" min="0" value={productFormData.quantity} onChange={e => setProductFormData({ ...productFormData, quantity: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Giá vốn (đ)</Label>
+                <Label>Giá nhập kho (đ)</Label>
                 <Input type="number" min="0" value={productFormData.costPrice} onChange={e => setProductFormData({ ...productFormData, costPrice: e.target.value })} />
               </div>
               <div className="space-y-1.5">
@@ -707,18 +798,42 @@ export function SettingsTab() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
+                <Label>{productForm.product ? "Tồn kho hiện tại" : "Số lượng nhập ngay (0 = chỉ tạo SP)"}</Label>
+                <Input type="number" min="0" value={productFormData.quantity} onChange={e => setProductFormData({ ...productFormData, quantity: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
                 <Label>Bảo hành (tháng)</Label>
                 <Input type="number" min="0" value={productFormData.warrantyMonths} onChange={e => setProductFormData({ ...productFormData, warrantyMonths: e.target.value })} placeholder="0" />
               </div>
-              <div className="space-y-1.5">
-                <Label>Ghi chú</Label>
-                <Input value={productFormData.note} onChange={e => setProductFormData({ ...productFormData, note: e.target.value })} placeholder="Mô tả sản phẩm..." />
-              </div>
             </div>
+            <div className="space-y-1.5">
+              <Label>Ghi chú sản phẩm</Label>
+              <Input value={productFormData.note} onChange={e => setProductFormData({ ...productFormData, note: e.target.value })} placeholder="Mô tả sản phẩm..." />
+            </div>
+            {/* Import fields: only shown when creating new product with quantity > 0 */}
+            {!productForm.product && Number(productFormData.quantity) > 0 && (
+              <>
+                <div className="border-t pt-3">
+                  <div className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Thông tin phiếu nhập kho</div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Ngày nhập *</Label>
+                    <Input type="date" value={productFormData.importDate} onChange={e => setProductFormData({ ...productFormData, importDate: e.target.value })} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Ghi chú nhập kho</Label>
+                    <Input value={productFormData.importNote} onChange={e => setProductFormData({ ...productFormData, importNote: e.target.value })} placeholder="VD: Nhập đầu tháng..." />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setProductForm({ open: false, product: null })}>Hủy</Button>
-            <Button onClick={handleProductSubmit} className="bg-emerald-600 hover:bg-emerald-700">Lưu sản phẩm</Button>
+            <Button onClick={handleProductSubmit} className="bg-emerald-600 hover:bg-emerald-700">
+              {productForm.product ? "Lưu thay đổi" : "Tạo sản phẩm"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -729,18 +844,36 @@ export function SettingsTab() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <PackagePlus className="w-5 h-5 text-emerald-600" />
-              Nhập kho
+              Phiếu nhập kho
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="bg-muted/30 rounded-lg p-3">
-              <div className="text-sm font-medium">
-                {products?.find(p => p.id === importStock.productId)?.name ?? "Sản phẩm"}
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                Tồn kho hiện tại: {products?.find(p => p.id === importStock.productId)?.quantity ?? 0} sản phẩm
-              </div>
+            <div className="space-y-1.5">
+              <Label>Sản phẩm *</Label>
+              <Select
+                value={importStock.productId ? String(importStock.productId) : ""}
+                onValueChange={v => setImportStock({ ...importStock, productId: v ? Number(v) : null })}
+              >
+                <SelectTrigger><SelectValue placeholder="Chọn sản phẩm..." /></SelectTrigger>
+                <SelectContent>
+                  {products?.map(p => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.name} (tồn: {p.quantity})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+            {importStock.productId && (
+              <div className="bg-muted/30 rounded-lg p-3">
+                <div className="text-sm font-medium">
+                  {products?.find(p => p.id === importStock.productId)?.name ?? "Sản phẩm"}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Tồn kho hiện tại: {products?.find(p => p.id === importStock.productId)?.quantity ?? 0} sản phẩm
+                </div>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label>Số lượng nhập *</Label>
               <Input type="number" min="1" value={importData.quantity} onChange={e => setImportData({ ...importData, quantity: e.target.value })} placeholder="Nhập số lượng..." />
@@ -757,11 +890,101 @@ export function SettingsTab() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setImportStock({ open: false, productId: null })}>Hủy</Button>
             <Button onClick={handleImportStock} className="bg-emerald-600 hover:bg-emerald-700">
-              <PackagePlus className="w-4 h-4 mr-2" /> Xác nhận nhập kho
+              <PackagePlus className="w-4 h-4 mr-2" /> Lưu phiếu nhập
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </MainLayout>
+  );
+}
+
+interface EmployeeDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  employee: Employee | null;
+  employees: Employee[];
+  onSubmit: (values: Record<string, unknown>) => Promise<void>;
+}
+
+function EmployeeDialog({ open, onOpenChange, employee, employees, onSubmit }: EmployeeDialogProps) {
+  const [form, setForm] = useState({
+    name: employee?.name ?? "",
+    role: (employee?.role ?? "Nhân viên") as string,
+    position: employee?.position ?? "",
+    username: employee?.username ?? "",
+    password: "",
+    managerId: employee?.managerId ? String(employee.managerId) : "",
+  });
+
+  const isEdit = !!employee;
+
+  const handleSubmit = async () => {
+    if (!form.name) { alert("Vui lòng nhập tên nhân viên"); return; }
+    if (!form.username) { alert("Vui lòng nhập tên đăng nhập"); return; }
+    if (!isEdit && !form.password) { alert("Vui lòng nhập mật khẩu"); return; }
+    await onSubmit({
+      name: form.name,
+      role: form.role,
+      position: form.position || undefined,
+      username: form.username,
+      password: form.password || undefined,
+      managerId: form.managerId ? Number(form.managerId) : undefined,
+    });
+    onOpenChange(false);
+  };
+
+  const otherEmployees = employees.filter(e => e.id !== employee?.id);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{employee ? "Sửa nhân viên" : "Thêm nhân viên"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>Tên nhân viên *</Label>
+            <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Nhập tên nhân viên..." />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Chức vụ</Label>
+            <Select value={form.role} onValueChange={v => setForm({ ...form, role: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Admin">Admin</SelectItem>
+                <SelectItem value="Nhân viên">Nhân viên</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Chức danh (tùy chọn)</Label>
+            <Input value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} placeholder="VD: Trưởng nhóm..." />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Tên đăng nhập *</Label>
+            <Input value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} placeholder="username..." />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{employee ? "Mật khẩu (để trống = không đổi)" : "Mật khẩu *"}</Label>
+            <Input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="••••••••" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Người quản lý</Label>
+            <Select value={form.managerId || "__none__"} onValueChange={v => setForm({ ...form, managerId: v === "__none__" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="Chọn người quản lý..." /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">-- Không có --</SelectItem>
+                {otherEmployees.map(e => <SelectItem key={e.id} value={String(e.id)}>{e.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Hủy</Button>
+          <Button onClick={handleSubmit} className="bg-emerald-600 hover:bg-emerald-700">Lưu nhân viên</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -56,6 +56,20 @@ export function CustomersTab() {
     }
   }, [setLocation]);
 
+  const { data: customersDataForDeeplink } = useListCustomers({ page: 1, pageSize: 1000 });
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cId = params.get("customerId");
+    if (cId && customersDataForDeeplink?.customers) {
+      const customer = customersDataForDeeplink.customers.find(c => c.id === Number(cId));
+      if (customer) {
+        setSelectedCustomer(customer);
+        setDialogOpen(true);
+        setLocation("/", { replace: true });
+      }
+    }
+  }, [customersDataForDeeplink, setLocation]);
+
   const { data: statusesData } = useListCustomerStatuses();
   const { data: employeesData } = useListEmployees();
   const deleteCustomer = useDeleteCustomer();

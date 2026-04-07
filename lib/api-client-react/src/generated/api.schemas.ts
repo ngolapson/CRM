@@ -171,6 +171,7 @@ export interface Customer {
   createdAt?: string;
   name: string;
   phone: string;
+  email?: string | null;
   address?: string;
   note?: string;
   statusId: number;
@@ -359,3 +360,78 @@ export type GetTopCustomersParams = {
 export type GetExpiringWarrantiesParams = {
   days?: number;
 };
+
+export interface DailyRevenueItem {
+  day: number;
+  revenue: number;
+}
+
+export interface TopProductItem {
+  productId: number | null;
+  productName: string | null;
+  productTypeName: string | null;
+  supplySourceName: string | null;
+  totalRevenue: number;
+  totalProfit: number;
+  totalSold: number;
+}
+
+export interface SalesMonthlyStats {
+  monthRevenue: number;
+  monthOrders: number;
+  monthCustomers: number;
+  monthProfit: number;
+  monthCostTotal: number;
+  dailyRevenue: DailyRevenueItem[];
+  topProducts: TopProductItem[];
+}
+
+export interface ProfitLossMonthItem {
+  month: string;
+  profit: number;
+  revenue: number;
+  cost: number;
+}
+
+export interface ProfitLossStats {
+  monthProfit: number;
+  monthRevenue: number;
+  monthCostTotal: number;
+  profitByMonth: ProfitLossMonthItem[];
+}
+
+export interface InventoryDetailItem {
+  id: number;
+  name: string;
+  productTypeId?: number | null;
+  productTypeName?: string | null;
+  supplySourceId?: number | null;
+  supplySourceName?: string | null;
+  quantity: number;
+  costPrice: number;
+  sellPrice: number;
+  warrantyMonths?: number | null;
+  note?: string | null;
+  createdAt?: string | null;
+  totalImported: number;
+  totalSold: number;
+  soldLast30Days: number;
+  lastImportDate?: string | null;
+  daysSinceImport: number;
+  inventoryValue: number;
+}
+
+export interface WarrantyActiveItem {
+  orderId: number;
+  orderCode?: string | null;
+  customerId: number;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string | null;
+  productTypeName?: string | null;
+  supplySourceName?: string | null;
+  customProductName?: string | null;
+  warrantyCode?: string | null;
+  warrantyExpiry?: string | null;
+  daysRemaining?: number | null;
+}

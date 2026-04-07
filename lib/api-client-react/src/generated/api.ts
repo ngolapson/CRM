@@ -38,15 +38,18 @@ import type {
   GetTopCustomersParams,
   HealthStatus,
   InventorySummary,
+  InventoryDetailItem,
   ListCustomersParams,
   MonthlyProfitItem,
   MonthlyTrendItem,
   Product,
   ProductType,
+  ProfitLossStats,
   ReorderBody,
   ReportSummary,
   RevenueByEmployeeItem,
   RevenueBySourceItem,
+  SalesMonthlyStats,
   SalesTrendItem,
   SourceCustomerStats,
   StatusDistributionItem,
@@ -56,6 +59,7 @@ import type {
   TodayStats,
   TopCustomerItem,
   TopSalesItem,
+  WarrantyActiveItem,
   WarrantyItem,
 } from "./api.schemas";
 
@@ -4194,5 +4198,157 @@ export function useGetInventorySummary<
     queryKey: QueryKey;
   };
 
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getGetSalesMonthlyUrl = () => `/api/operations/sales-monthly`;
+
+export const getSalesMonthly = async (options?: RequestInit): Promise<SalesMonthlyStats> => {
+  return customFetch<SalesMonthlyStats>(getGetSalesMonthlyUrl(), { ...options, method: "GET" });
+};
+
+export const getGetSalesMonthlyQueryKey = () => [`/api/operations/sales-monthly`] as const;
+
+export const getGetSalesMonthlyQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSalesMonthly>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getSalesMonthly>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetSalesMonthlyQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSalesMonthly>>> = ({ signal }) =>
+    getSalesMonthly({ signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSalesMonthly>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export function useGetSalesMonthly<
+  TData = Awaited<ReturnType<typeof getSalesMonthly>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getSalesMonthly>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSalesMonthlyQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getGetProfitLossUrl = () => `/api/operations/profit-loss`;
+
+export const getProfitLoss = async (options?: RequestInit): Promise<ProfitLossStats> => {
+  return customFetch<ProfitLossStats>(getGetProfitLossUrl(), { ...options, method: "GET" });
+};
+
+export const getGetProfitLossQueryKey = () => [`/api/operations/profit-loss`] as const;
+
+export const getGetProfitLossQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProfitLoss>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getProfitLoss>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetProfitLossQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfitLoss>>> = ({ signal }) =>
+    getProfitLoss({ signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getProfitLoss>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export function useGetProfitLoss<
+  TData = Awaited<ReturnType<typeof getProfitLoss>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getProfitLoss>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetProfitLossQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getGetInventoryDetailUrl = () => `/api/operations/inventory`;
+
+export const getInventoryDetail = async (options?: RequestInit): Promise<InventoryDetailItem[]> => {
+  return customFetch<InventoryDetailItem[]>(getGetInventoryDetailUrl(), { ...options, method: "GET" });
+};
+
+export const getGetInventoryDetailQueryKey = () => [`/api/operations/inventory`] as const;
+
+export const getGetInventoryDetailQueryOptions = <
+  TData = Awaited<ReturnType<typeof getInventoryDetail>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getInventoryDetail>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetInventoryDetailQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getInventoryDetail>>> = ({ signal }) =>
+    getInventoryDetail({ signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getInventoryDetail>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export function useGetInventoryDetail<
+  TData = Awaited<ReturnType<typeof getInventoryDetail>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getInventoryDetail>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetInventoryDetailQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getGetActiveWarrantyUrl = () => `/api/operations/warranty`;
+
+export const getActiveWarranty = async (options?: RequestInit): Promise<WarrantyActiveItem[]> => {
+  return customFetch<WarrantyActiveItem[]>(getGetActiveWarrantyUrl(), { ...options, method: "GET" });
+};
+
+export const getGetActiveWarrantyQueryKey = () => [`/api/operations/warranty`] as const;
+
+export const getGetActiveWarrantyQueryOptions = <
+  TData = Awaited<ReturnType<typeof getActiveWarranty>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getActiveWarranty>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetActiveWarrantyQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getActiveWarranty>>> = ({ signal }) =>
+    getActiveWarranty({ signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getActiveWarranty>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export function useGetActiveWarranty<
+  TData = Awaited<ReturnType<typeof getActiveWarranty>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getActiveWarranty>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetActiveWarrantyQueryOptions(options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
   return { ...query, queryKey: queryOptions.queryKey };
 }

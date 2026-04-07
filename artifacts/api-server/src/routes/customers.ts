@@ -40,6 +40,7 @@ async function getCustomerWithOrders(customerId: number) {
       createdAt: customersTable.createdAt,
       name: customersTable.name,
       phone: customersTable.phone,
+      email: customersTable.email,
       address: customersTable.address,
       note: customersTable.note,
       statusId: customersTable.statusId,
@@ -215,12 +216,12 @@ async function insertOrders(customerId: number, orders: OrderInput[]): Promise<v
 
 router.post("/customers", async (req, res) => {
   const body = req.body as {
-    name?: string; phone?: string; address?: string | null; note?: string | null;
+    name?: string; phone?: string; email?: string | null; address?: string | null; note?: string | null;
     statusId?: number; employeeId?: number; sourceId?: number | null;
     lastContactAt?: string | null; nextContactAt?: string | null; createdAt?: string;
     orders?: OrderInput[];
   };
-  const { name, phone, address = null, note = null, statusId, employeeId, sourceId = null, lastContactAt = null, nextContactAt = null, createdAt, orders = [] } = body;
+  const { name, phone, email = null, address = null, note = null, statusId, employeeId, sourceId = null, lastContactAt = null, nextContactAt = null, createdAt, orders = [] } = body;
 
   if (!name || !phone) { res.status(400).json({ error: "name and phone are required" }); return; }
 
@@ -231,6 +232,7 @@ router.post("/customers", async (req, res) => {
     code,
     name,
     phone,
+    email,
     address,
     note,
     statusId: statusId!,
@@ -250,17 +252,17 @@ router.post("/customers", async (req, res) => {
 router.put("/customers/:id", async (req, res) => {
   const id = Number(req.params.id);
   const body = req.body as {
-    name?: string; phone?: string; address?: string | null; note?: string | null;
+    name?: string; phone?: string; email?: string | null; address?: string | null; note?: string | null;
     statusId?: number; employeeId?: number; sourceId?: number | null;
     lastContactAt?: string | null; nextContactAt?: string | null;
     orders?: OrderInput[];
   };
-  const { name, phone, address = null, note = null, statusId, employeeId, sourceId = null, lastContactAt = null, nextContactAt = null, orders } = body;
+  const { name, phone, email = null, address = null, note = null, statusId, employeeId, sourceId = null, lastContactAt = null, nextContactAt = null, orders } = body;
 
   if (!name || !phone) { res.status(400).json({ error: "name and phone are required" }); return; }
 
   await db.update(customersTable).set({
-    name, phone, address, note,
+    name, phone, email, address, note,
     statusId: statusId!,
     employeeId: employeeId!,
     sourceId,

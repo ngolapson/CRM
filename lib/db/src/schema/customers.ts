@@ -11,6 +11,7 @@ export const customersTable = pgTable("customers", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   name: text("name").notNull(),
   phone: text("phone").notNull(),
+  email: text("email"),
   address: text("address"),
   note: text("note"),
   statusId: integer("status_id").references(() => customerStatusesTable.id).notNull(),
