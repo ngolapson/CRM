@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -6,32 +5,37 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  useCreateEmployee, useUpdateEmployee, Employee,
-  useCreateCustomerStatus, useUpdateCustomerStatus, CustomerStatus,
-  useCreateCustomerSource, useUpdateCustomerSource, CustomerSource,
-  useCreateProductType, useUpdateProductType, ProductType,
-  useCreateSupplySource, useUpdateSupplySource, SupplySource,
-  getListEmployeesQueryKey, getListCustomerStatusesQueryKey, getListCustomerSourcesQueryKey,
-  getListProductTypesQueryKey, getListSupplySourcesQueryKey
-} from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Checkbox } from "@/components/ui/checkbox";
 
-export function GenericDialog({ 
-  open, onOpenChange, title, entity, schema, fields, onSubmit 
-}: { 
-  open: boolean; onOpenChange: (open: boolean) => void; title: string; 
-  entity: any; schema: z.ZodSchema<any>; fields: { name: string, label: string, type?: string }[];
-  onSubmit: (values: any) => Promise<void>;
-}) {
+interface DialogField {
+  name: string;
+  label: string;
+  type?: string;
+}
+
+interface GenericDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  entity: object | null;
+  schema: z.ZodTypeAny;
+  fields: DialogField[];
+  onSubmit: (values: Record<string, unknown>) => Promise<void>;
+}
+
+export function GenericDialog({
+  open, onOpenChange, title, entity, schema, fields, onSubmit,
+}: GenericDialogProps) {
+  const entityRecord = entity as Record<string, unknown> | null;
+  const defaultValues = entityRecord
+    ? Object.fromEntries(Object.entries(entityRecord).map(([k, v]) => [k, v ?? ""]))
+    : fields.reduce<Record<string, string>>((acc, f) => ({ ...acc, [f.name]: "" }), {});
+
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: entity || fields.reduce((acc, f) => ({ ...acc, [f.name]: "" }), {})
+    defaultValues,
   });
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Record<string, unknown>) => {
     await onSubmit(values);
     onOpenChange(false);
     form.reset();
@@ -52,12 +56,12 @@ export function GenericDialog({
                   <FormItem>
                     <FormLabel>{field.label}</FormLabel>
                     <FormControl>
-                      {field.type === 'color' ? (
-                        <Input type="color" className="h-10 p-1 w-full" {...formField} />
-                      ) : field.type === 'number' ? (
-                        <Input type="number" {...formField} />
+                      {field.type === "color" ? (
+                        <Input type="color" className="h-10 p-1 w-full" {...formField} value={String(formField.value ?? "#6b7280")} />
+                      ) : field.type === "number" ? (
+                        <Input type="number" {...formField} value={String(formField.value ?? "")} />
                       ) : (
-                        <Input placeholder={`Nhập ${field.label.toLowerCase()}...`} {...formField} />
+                        <Input placeholder={`Nhập ${field.label.toLowerCase()}...`} {...formField} value={String(formField.value ?? "")} />
                       )}
                     </FormControl>
                     <FormMessage />

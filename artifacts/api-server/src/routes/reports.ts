@@ -8,7 +8,7 @@ import {
   customerSourcesTable,
   productsTable,
 } from "@workspace/db/schema";
-import { eq, sql, desc, gte, lte, and, lt } from "drizzle-orm";
+import { eq, sql, desc, asc, gte, lte, and, lt } from "drizzle-orm";
 
 const router = Router();
 

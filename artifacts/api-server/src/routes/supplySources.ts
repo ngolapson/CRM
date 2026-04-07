@@ -5,24 +5,24 @@ import { eq } from "drizzle-orm";
 
 const router = Router();
 
-router.get("/supply-sources", async (req, res) => {
+router.get("/supply-sources", async (_req, res) => {
   const sources = await db.select().from(supplySourcesTable).orderBy(supplySourcesTable.id);
   res.json(sources);
 });
 
 router.post("/supply-sources", async (req, res) => {
-  const { name, inventoryValue = 0 } = req.body;
-  if (!name) return res.status(400).json({ error: "name is required" });
+  const { name, inventoryValue = 0 } = req.body as { name?: string; inventoryValue?: number };
+  if (!name) { res.status(400).json({ error: "name is required" }); return; }
   const [source] = await db.insert(supplySourcesTable).values({ name, inventoryValue }).returning();
   res.status(201).json(source);
 });
 
 router.put("/supply-sources/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { name, inventoryValue = 0 } = req.body;
-  if (!name) return res.status(400).json({ error: "name is required" });
+  const { name, inventoryValue = 0 } = req.body as { name?: string; inventoryValue?: number };
+  if (!name) { res.status(400).json({ error: "name is required" }); return; }
   const [source] = await db.update(supplySourcesTable).set({ name, inventoryValue }).where(eq(supplySourcesTable.id, id)).returning();
-  if (!source) return res.status(404).json({ error: "Not found" });
+  if (!source) { res.status(404).json({ error: "Not found" }); return; }
   res.json(source);
 });
 

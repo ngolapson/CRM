@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 const router = Router();
 
-router.get("/products", async (req, res) => {
+router.get("/products", async (_req, res) => {
   const products = await db
     .select({
       id: productsTable.id,
@@ -33,18 +33,24 @@ router.get("/products", async (req, res) => {
 });
 
 router.post("/products", async (req, res) => {
-  const { name, productTypeId = null, supplySourceId = null, quantity = 0, costPrice = 0, sellPrice = 0, warrantyMonths = null, note = null } = req.body;
-  if (!name) return res.status(400).json({ error: "name is required" });
+  const { name, productTypeId = null, supplySourceId = null, quantity = 0, costPrice = 0, sellPrice = 0, warrantyMonths = null, note = null } = req.body as {
+    name?: string; productTypeId?: number | null; supplySourceId?: number | null;
+    quantity?: number; costPrice?: number; sellPrice?: number; warrantyMonths?: number | null; note?: string | null;
+  };
+  if (!name) { res.status(400).json({ error: "name is required" }); return; }
   const [product] = await db.insert(productsTable).values({ name, productTypeId, supplySourceId, quantity, costPrice, sellPrice, warrantyMonths, note }).returning();
   res.status(201).json({ ...product, createdAt: product.createdAt?.toISOString() });
 });
 
 router.put("/products/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { name, productTypeId = null, supplySourceId = null, quantity = 0, costPrice = 0, sellPrice = 0, warrantyMonths = null, note = null } = req.body;
-  if (!name) return res.status(400).json({ error: "name is required" });
+  const { name, productTypeId = null, supplySourceId = null, quantity = 0, costPrice = 0, sellPrice = 0, warrantyMonths = null, note = null } = req.body as {
+    name?: string; productTypeId?: number | null; supplySourceId?: number | null;
+    quantity?: number; costPrice?: number; sellPrice?: number; warrantyMonths?: number | null; note?: string | null;
+  };
+  if (!name) { res.status(400).json({ error: "name is required" }); return; }
   const [product] = await db.update(productsTable).set({ name, productTypeId, supplySourceId, quantity, costPrice, sellPrice, warrantyMonths, note }).where(eq(productsTable.id, id)).returning();
-  if (!product) return res.status(404).json({ error: "Not found" });
+  if (!product) { res.status(404).json({ error: "Not found" }); return; }
   res.json({ ...product, createdAt: product.createdAt?.toISOString() });
 });
 

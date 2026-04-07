@@ -13,7 +13,8 @@ import {
   useListEmployees, 
   useListCustomerStatuses,
   useDeleteCustomer,
-  getListCustomersQueryKey
+  getListCustomersQueryKey,
+  Customer,
 } from "@workspace/api-client-react";
 import { formatCurrency, formatDate, formatCustomerCode } from "@/lib/format";
 import { CustomerDialog } from "@/components/customers/CustomerDialog";
@@ -31,7 +32,7 @@ export function CustomersTab() {
   const [search, setSearch] = useState("");
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(undefined);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>(undefined);
 
   const { data: statusesData } = useListCustomerStatuses();
   const { data: employeesData } = useListEmployees();

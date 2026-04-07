@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 
 const router = Router();
 
-router.get("/employees", async (req, res) => {
+router.get("/employees", async (_req, res) => {
   const employees = await db.select().from(employeesTable).orderBy(employeesTable.id);
   res.json(employees.map(e => ({
     id: e.id,
@@ -17,8 +17,8 @@ router.get("/employees", async (req, res) => {
 });
 
 router.post("/employees", async (req, res) => {
-  const { name, role = "Admin" } = req.body;
-  if (!name) return res.status(400).json({ error: "name is required" });
+  const { name, role = "Admin" } = req.body as { name?: string; role?: string };
+  if (!name) { res.status(400).json({ error: "name is required" }); return; }
   const [emp] = await db.insert(employeesTable).values({ name, role }).returning();
   res.status(201).json({
     id: emp.id,
@@ -31,10 +31,10 @@ router.post("/employees", async (req, res) => {
 
 router.put("/employees/:id", async (req, res) => {
   const id = Number(req.params.id);
-  const { name, role = "Admin" } = req.body;
-  if (!name) return res.status(400).json({ error: "name is required" });
+  const { name, role = "Admin" } = req.body as { name?: string; role?: string };
+  if (!name) { res.status(400).json({ error: "name is required" }); return; }
   const [emp] = await db.update(employeesTable).set({ name, role }).where(eq(employeesTable.id, id)).returning();
-  if (!emp) return res.status(404).json({ error: "Not found" });
+  if (!emp) { res.status(404).json({ error: "Not found" }); return; }
   res.json({
     id: emp.id,
     name: emp.name,
