@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: crm-app
+    runtime: node
+    buildCommand: >
+      npm install -g pnpm &&
+      pnpm install &&
+      PORT=3000 BASE_PATH=/ pnpm --filter @workspace/crm run build &&
+      PORT=3000 BASE_PATH=/landing/ pnpm --filter @workspace/landing run build &&
+      pnpm --filter @workspace/api-server run build
+    startCommand: node artifacts/api-server/dist/index.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: PORT
+        value: 10000
