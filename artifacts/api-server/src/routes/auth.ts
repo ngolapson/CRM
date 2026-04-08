@@ -32,8 +32,9 @@ router.post("/auth/login", async (req, res) => {
       role: employee.role,
       username: employee.username,
     });
-  } catch {
-    res.status(500).json({ error: "Lỗi hệ thống" });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "Lỗi hệ thống", detail: String(err) });
   }
 });
 
