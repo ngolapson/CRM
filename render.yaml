@@ -5,7 +5,7 @@ services:
     buildCommand: >
       npm install -g pnpm &&
       pnpm install &&
-      pnpm --filter @workspace/db push-force &&
+      (pnpm --filter @workspace/db push-force || true) &&
       PORT=3000 BASE_PATH=/ pnpm --filter @workspace/crm run build &&
       PORT=3000 BASE_PATH=/landing/ pnpm --filter @workspace/landing run build &&
       pnpm --filter @workspace/api-server run build
