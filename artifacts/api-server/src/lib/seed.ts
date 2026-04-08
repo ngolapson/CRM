@@ -35,7 +35,8 @@ export async function ensureAdminAccount() {
   }
 
   const admin = existing[0]!;
-  if (!admin.username || !admin.passwordHash) {
+  const shouldReset = process.env.RESET_ADMIN_PASSWORD === "true";
+  if (!admin.username || !admin.passwordHash || shouldReset) {
     const hash = await bcrypt.hash(ADMIN_DEFAULT_PASSWORD, 10);
     await db.update(employeesTable)
       .set({ username: ADMIN_USERNAME, passwordHash: hash })
