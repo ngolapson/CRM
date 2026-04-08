@@ -40,13 +40,13 @@ if (process.env.NODE_ENV === "production") {
 
   const landingDir = path.join(rootDir, "artifacts/landing/dist/public");
   app.use("/landing", express.static(landingDir));
-  app.get("/landing/*", (_req, res) => {
+  app.get("/landing/*path", (_req, res) => {
     res.sendFile(path.join(landingDir, "index.html"));
   });
 
   const crmDir = path.join(rootDir, "artifacts/crm/dist/public");
   app.use("/", express.static(crmDir));
-  app.get("*", (_req, res) => {
+  app.get("*path", (_req, res) => {
     res.sendFile(path.join(crmDir, "index.html"));
   });
 }
