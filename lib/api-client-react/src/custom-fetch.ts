@@ -17,6 +17,7 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _employeeIdGetter: (() => string | null) | null = null;
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -42,6 +43,16 @@ export function setBaseUrl(url: string | null): void {
  */
 export function setAuthTokenGetter(getter: AuthTokenGetter | null): void {
   _authTokenGetter = getter;
+}
+
+/**
+ * Register a getter that supplies the current employee's ID.
+ * Before every fetch the getter is invoked; when it returns a non-null string,
+ * an `x-employee-id` header is attached to the request so the server can
+ * enforce role-based access control.
+ */
+export function setEmployeeIdGetter(getter: (() => string | null) | null): void {
+  _employeeIdGetter = getter;
 }
 
 function isRequest(input: RequestInfo | URL): input is Request {
@@ -355,6 +366,14 @@ export async function customFetch<T = unknown>(
     const token = await _authTokenGetter();
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
+    }
+  }
+
+  // Attach employee ID for server-side role-based access control.
+  if (_employeeIdGetter && !headers.has("x-employee-id")) {
+    const id = _employeeIdGetter();
+    if (id) {
+      headers.set("x-employee-id", id);
     }
   }
 

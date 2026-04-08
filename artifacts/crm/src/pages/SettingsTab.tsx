@@ -1,6 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useState, useEffect, useCallback } from "react";
 import { useSearch } from "wouter";
+import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,8 @@ interface ImportStockState {
 
 export function SettingsTab() {
   const search = useSearch();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "Admin";
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -427,9 +430,11 @@ export function SettingsTab() {
           <Card className="flex flex-col h-[calc(100vh-240px)]">
             <CardHeader className="pb-3 border-b flex flex-row items-center justify-between space-y-0 sticky top-0 bg-card z-10">
               <CardTitle className="text-base font-semibold">Quản lý nhân viên</CardTitle>
-              <Button size="icon" variant="ghost" onClick={() => setDialogState({ open: true, type: "employee", entity: null })} className="h-8 w-8 text-emerald-600">
-                <Plus className="w-5 h-5" />
-              </Button>
+              {isAdmin && (
+                <Button size="icon" variant="ghost" onClick={() => setDialogState({ open: true, type: "employee", entity: null })} className="h-8 w-8 text-emerald-600">
+                  <Plus className="w-5 h-5" />
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="p-0 overflow-y-auto flex-1">
               <div className="divide-y">
@@ -448,16 +453,25 @@ export function SettingsTab() {
                       </div>
                       {e.username && <div className="text-xs text-blue-600 mt-0.5">@{e.username}</div>}
                     </div>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => setDialogState({ open: true, type: "employee", entity: e })} className="h-7 w-7 text-primary"><Pencil className="w-3.5 h-3.5" /></Button>
-                      {!e.isProtected && <Button variant="ghost" onClick={() => handleDelete("employee", e.id, e.name)} size="icon" className="h-7 w-7 text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>}
-                    </div>
+                    {isAdmin && (
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => setDialogState({ open: true, type: "employee", entity: e })} className="h-7 w-7 text-primary"><Pencil className="w-3.5 h-3.5" /></Button>
+                        {!e.isProtected && <Button variant="ghost" onClick={() => handleDelete("employee", e.id, e.name)} size="icon" className="h-7 w-7 text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
-              <div className="p-3 border-t">
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 h-9" onClick={() => setDialogState({ open: true, type: "employee", entity: null })}>+ Thêm nhân viên</Button>
-              </div>
+              {isAdmin && (
+                <div className="p-3 border-t">
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 h-9" onClick={() => setDialogState({ open: true, type: "employee", entity: null })}>+ Thêm nhân viên</Button>
+                </div>
+              )}
+              {!isAdmin && (
+                <div className="p-3 border-t">
+                  <p className="text-xs text-center text-muted-foreground">Chỉ quản trị viên có thể thêm, sửa, xóa tài khoản</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

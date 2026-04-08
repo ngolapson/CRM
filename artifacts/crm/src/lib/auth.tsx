@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { setEmployeeIdGetter } from "@workspace/api-client-react";
 
 export interface AuthUser {
   id: number;
@@ -25,6 +26,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
   });
+
+  useEffect(() => {
+    setEmployeeIdGetter(user ? () => String(user.id) : null);
+    return () => setEmployeeIdGetter(null);
+  }, [user]);
 
   const login = async (username: string, password: string) => {
     const res = await fetch("/api/auth/login", {
